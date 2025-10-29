@@ -2,6 +2,8 @@ package com.example.pcard.controller;
 
 import com.example.pcard.dao.UserDao;
 import com.example.pcard.model.User;
+import com.example.pcard.util.TurnstileVerifier;
+import com.example.pcard.util.TurnstileGate;
 import org.mindrot.jbcrypt.BCrypt;
 
 import javax.servlet.ServletException;
@@ -18,6 +20,9 @@ public class RegisterServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (TurnstileVerifier.isEnabled() && TurnstileGate.isRequired(req)) {
+            req.setAttribute("turnstileSiteKey", TurnstileVerifier.getSiteKey());
+        }
         req.getRequestDispatcher("register.jsp").forward(req, resp);
     }
 
@@ -44,6 +49,26 @@ public class RegisterServlet extends HttpServlet {
         }
         
         try {
+            // Turnstile 校验（仅当被要求时）
+            if (TurnstileVerifier.isEnabled() && TurnstileGate.isRequired(request)) {
+                String token = request.getParameter("cf-turnstile-response");
+                String clientIp = (String) request.getAttribute("clientIp");
+                // 降级处理：如果 clientIp 为 null，使用请求远程地址
+                if (clientIp == null) {
+                    clientIp = request.getRemoteAddr();
+                }
+                
+                if (!TurnstileVerifier.verify(token, clientIp)) {
+                    request.setAttribute("errorMessage", "验证失败，请重试。");
+                    if (TurnstileVerifier.isEnabled()) {
+                        request.setAttribute("turnstileSiteKey", TurnstileVerifier.getSiteKey());
+                    }
+                    request.getRequestDispatcher("register.jsp").forward(request, response);
+                    return;
+                }
+                // 验证成功后清除要求
+                TurnstileGate.clear(request);
+            }
             if (userDao.getUserByUsername(username) != null) {
                 request.setAttribute("errorMessage", "用户名已存在!");
                 request.getRequestDispatcher("register.jsp").forward(request, response);

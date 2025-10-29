@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.example.pcard.util.TurnstileGate;
+
 /**
  * 速率限制过滤器
  * 提供应用层的速率限制，作为Cloudflare速率限制的补充
@@ -24,12 +26,20 @@ public class RateLimitFilter implements Filter {
     
     // 时间窗口 (毫秒)
     private static final long TIME_WINDOW = 60000; // 1分钟
+    // 触发 Turnstile 后要求验证的持续时长（毫秒）
+    private static final long CHALLENGE_COOLDOWN_MS = getEnvLong("CF_TURNSTILE_COOLDOWN_MS", 10 * 60 * 1000L); // 默认10分钟
     
     // 不同端点的限制（已大幅提高限制）
     private static final int DEFAULT_LIMIT = 1000;  // 100 -> 1000
     private static final int LOGIN_LIMIT = 50;      // 5 -> 50
     private static final int REGISTER_LIMIT = 30;   // 3 -> 30
     private static final int API_LIMIT = 500;       // 50 -> 500
+
+    // Turnstile 触发阈值（在同一窗口内达到则要求验证）
+    private static final int DEFAULT_CHALLENGE_TRIGGER = getEnvInt("CF_TURNSTILE_TRIGGER_DEFAULT", 60);
+    private static final int LOGIN_CHALLENGE_TRIGGER = getEnvInt("CF_TURNSTILE_TRIGGER_LOGIN", 5);
+    private static final int REGISTER_CHALLENGE_TRIGGER = getEnvInt("CF_TURNSTILE_TRIGGER_REGISTER", 3);
+    private static final int API_CHALLENGE_TRIGGER = getEnvInt("CF_TURNSTILE_TRIGGER_API", 40);
 
     @Override
     public void init(FilterConfig filterConfig) {
@@ -75,9 +85,11 @@ public class RateLimitFilter implements Filter {
 
         // 确定限制值
         int limit = getLimit(uri);
-        
-        // 检查速率限制
-        if (!checkRateLimit(clientIp, limit)) {
+        int challengeTrigger = getChallengeTrigger(uri);
+
+        // 检查速率限制并在达到阈值时触发 Turnstile
+        RateCheckResult rate = checkRateAndMaybeTrigger(req, clientIp, limit, challengeTrigger);
+        if (!rate.allowed) {
             logger.warn("速率限制触发: IP={}, URI={}, Limit={}", clientIp, uri, limit);
             
             resp.setStatus(429); // Too Many Requests
@@ -99,13 +111,20 @@ public class RateLimitFilter implements Filter {
     /**
      * 检查速率限制
      */
-    private boolean checkRateLimit(String clientIp, int limit) {
+    private RateCheckResult checkRateAndMaybeTrigger(HttpServletRequest req, String clientIp, int limit, int challengeTrigger) {
         long currentTime = System.currentTimeMillis();
-        
-        RequestCounter counter = requestCounts.computeIfAbsent(clientIp, 
+
+        RequestCounter counter = requestCounts.computeIfAbsent(clientIp,
                 k -> new RequestCounter(currentTime));
-        
-        return counter.increment(currentTime, TIME_WINDOW, limit);
+
+        int current = counter.incrementAndGet(currentTime, TIME_WINDOW);
+
+        if (current >= challengeTrigger) {
+            TurnstileGate.requireForDuration(req, CHALLENGE_COOLDOWN_MS);
+        }
+
+        boolean allowed = current <= limit;
+        return new RateCheckResult(allowed, current);
     }
 
     /**
@@ -120,6 +139,20 @@ public class RateLimitFilter implements Filter {
             return API_LIMIT;
         }
         return DEFAULT_LIMIT;
+    }
+
+    /**
+     * 根据URI确定 Turnstile 触发阈值
+     */
+    private int getChallengeTrigger(String uri) {
+        if (uri.contains("/login")) {
+            return LOGIN_CHALLENGE_TRIGGER;
+        } else if (uri.contains("/register")) {
+            return REGISTER_CHALLENGE_TRIGGER;
+        } else if (uri.contains("/api/") || uri.contains("/card") || uri.contains("/comment")) {
+            return API_CHALLENGE_TRIGGER;
+        }
+        return DEFAULT_CHALLENGE_TRIGGER;
     }
 
     /**
@@ -146,10 +179,10 @@ public class RateLimitFilter implements Filter {
     }
 
     /**
-     * 请求计数器
+     * 请求计数器（使用完全同步确保计数准确）
      */
     private static class RequestCounter {
-        private volatile long windowStart;
+        private long windowStart;
         private final AtomicInteger count;
 
         RequestCounter(long windowStart) {
@@ -157,16 +190,64 @@ public class RateLimitFilter implements Filter {
             this.count = new AtomicInteger(0);
         }
 
-        synchronized boolean increment(long currentTime, long timeWindow, int limit) {
-            // 如果超出时间窗口，重置计数器
+        /**
+         * 原子性地重置计数器（如需要）
+         * @return true 表示已重置，false 表示未超时
+         */
+        private synchronized boolean resetIfNeeded(long currentTime, long timeWindow) {
             if (currentTime - windowStart > timeWindow) {
                 windowStart = currentTime;
                 count.set(0);
+                return true;
             }
+            return false;
+        }
 
-            // 检查是否超过限制
-            int current = count.incrementAndGet();
-            return current <= limit;
+        /**
+         * 线程安全的增量计数
+         * @return 当前计数值
+         */
+        synchronized int incrementAndGet(long currentTime, long timeWindow) {
+            // 确保在同步块内检查和重置，防止竞态条件
+            resetIfNeeded(currentTime, timeWindow);
+            
+            // 返回当前计数并递增
+            return count.incrementAndGet();
+        }
+
+        /**
+         * 获取当前计数值（用于指标收集）
+         */
+        synchronized int get() {
+            return count.get();
+        }
+    }
+
+    /**
+     * 速率检查结果
+     */
+    private static class RateCheckResult {
+        final boolean allowed;
+        RateCheckResult(boolean allowed, int currentCount) {
+            this.allowed = allowed;
+        }
+    }
+
+    private static int getEnvInt(String name, int defVal) {
+        try {
+            String v = System.getenv(name);
+            return v == null ? defVal : Integer.parseInt(v);
+        } catch (Exception e) {
+            return defVal;
+        }
+    }
+
+    private static long getEnvLong(String name, long defVal) {
+        try {
+            String v = System.getenv(name);
+            return v == null ? defVal : Long.parseLong(v);
+        } catch (Exception e) {
+            return defVal;
         }
     }
 }

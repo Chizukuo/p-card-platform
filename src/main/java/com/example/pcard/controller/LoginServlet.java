@@ -3,6 +3,8 @@ package com.example.pcard.controller;
 import com.example.pcard.dao.UserDao;
 import com.example.pcard.model.User;
 import com.example.pcard.util.ValidationUtil;
+import com.example.pcard.util.TurnstileVerifier;
+import com.example.pcard.util.TurnstileGate;
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,10 @@ public class LoginServlet extends HttpServlet {
         if (redirect != null && !redirect.isEmpty()) {
             req.setAttribute("redirect", redirect);
         }
+        // Turnstile 站点 key（仅在达到触发条件时启用）
+        if (TurnstileVerifier.isEnabled() && TurnstileGate.isRequired(req)) {
+            req.setAttribute("turnstileSiteKey", TurnstileVerifier.getSiteKey());
+        }
         req.getRequestDispatcher("login.jsp").forward(req, resp);
     }
 
@@ -58,6 +64,26 @@ public class LoginServlet extends HttpServlet {
         }
 
         try {
+            // Turnstile 校验（仅当被要求时）
+            if (TurnstileVerifier.isEnabled() && TurnstileGate.isRequired(request)) {
+                String token = request.getParameter("cf-turnstile-response");
+                String clientIp = (String) request.getAttribute("clientIp");
+                // 降级处理：如果 clientIp 为 null，使用请求远程地址
+                if (clientIp == null) {
+                    clientIp = request.getRemoteAddr();
+                }
+                
+                if (!TurnstileVerifier.verify(token, clientIp)) {
+                    request.setAttribute("errorMessage", "验证失败，请重试。");
+                    if (TurnstileVerifier.isEnabled()) {
+                        request.setAttribute("turnstileSiteKey", TurnstileVerifier.getSiteKey());
+                    }
+                    request.getRequestDispatcher("login.jsp").forward(request, response);
+                    return;
+                }
+                // 验证成功后清除要求
+                TurnstileGate.clear(request);
+            }
             User user = userDao.getUserByUsername(username);
             if (user != null && BCrypt.checkpw(password, user.getPassword())) {
                 // 检查用户状态

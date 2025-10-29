@@ -4,10 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.*;
-import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import javax.servlet.http.HttpServletRequestWrapper;
 
 /**
  * Cloudflare集成过滤器
@@ -17,7 +17,6 @@ import java.io.IOException;
  * - 地理位置信息提取
  * - 真实IP地址获取
  */
-@WebFilter("/*")
 public class CloudflareFilter implements Filter {
     private static final Logger logger = LoggerFactory.getLogger(CloudflareFilter.class);
     
@@ -37,7 +36,7 @@ public class CloudflareFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        HttpServletRequest req = (HttpServletRequest) request;
+    HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
         // 提取Cloudflare信息
@@ -45,6 +44,8 @@ public class CloudflareFilter implements Filter {
         String cfIpCountry = req.getHeader("CF-IPCountry");
         String cfRay = req.getHeader("CF-Ray");
         String cfBotScore = req.getHeader("CF-Bot-Management-Score");
+    String xForwardedProto = req.getHeader("X-Forwarded-Proto");
+    String cfVisitor = req.getHeader("CF-Visitor"); // JSON: {"scheme":"https"}
         
         // 获取真实IP地址 (优先使用Cloudflare提供的IP)
         String realIp = cfConnectingIp != null ? cfConnectingIp : req.getRemoteAddr();
@@ -54,7 +55,7 @@ public class CloudflareFilter implements Filter {
         req.setAttribute("clientCountry", cfIpCountry);
         req.setAttribute("cfRay", cfRay);
         
-        // 记录详细的访问信息
+    // 记录详细的访问信息
         String uri = req.getRequestURI();
         String method = req.getMethod();
         String userAgent = req.getHeader("User-Agent");
@@ -97,6 +98,13 @@ public class CloudflareFilter implements Filter {
         //     return;
         // }
 
+        // 协议/HTTPS 适配：如果经过 Cloudflare 且实际为 HTTPS，则包装 request，确保 isSecure()/getScheme() 正确
+        boolean isHttps = "https".equalsIgnoreCase(xForwardedProto) ||
+                (cfVisitor != null && cfVisitor.toLowerCase().contains("\"scheme\":\"https\""));
+        if (isHttps && !req.isSecure()) {
+            req = new SchemeAwareRequestWrapper(req, true);
+        }
+
         // 检查是否来自Cloudflare (可选的额外安全检查)
         if (cfConnectingIp == null && isProductionEnvironment()) {
             logger.warn("请求不来自Cloudflare: IP={}, URI={}", req.getRemoteAddr(), uri);
@@ -104,8 +112,8 @@ public class CloudflareFilter implements Filter {
             // 可以选择阻止直接访问
         }
 
-        // 继续过滤链
-        chain.doFilter(request, response);
+        // 将可能被包装过的 req 继续传递
+        chain.doFilter(req, response);
     }
 
     @Override
@@ -141,5 +149,36 @@ public class CloudflareFilter implements Filter {
     private boolean isProductionEnvironment() {
         String env = System.getenv("APP_ENV");
         return "production".equalsIgnoreCase(env);
+    }
+
+    /**
+     * 根据代理头修正协议的 Request 包装器
+     */
+    private static class SchemeAwareRequestWrapper extends HttpServletRequestWrapper {
+        private final boolean secure;
+
+        public SchemeAwareRequestWrapper(HttpServletRequest request, boolean secure) {
+            super(request);
+            this.secure = secure;
+        }
+
+        @Override
+        public boolean isSecure() {
+            return secure || super.isSecure();
+        }
+
+        @Override
+        public String getScheme() {
+            return secure ? "https" : super.getScheme();
+        }
+
+        @Override
+        public int getServerPort() {
+            if (secure) {
+                // 如果被 Cloudflare 终止 TLS，应用感知 443 更合理
+                return 443;
+            }
+            return super.getServerPort();
+        }
     }
 }

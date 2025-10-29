@@ -9,6 +9,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>注册 - P-Card 平台</title>
     <link rel="stylesheet" href="css/style.css">
+    <c:if test="${not empty turnstileSiteKey}">
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    </c:if>
 </head>
 <body class="auth-page">
     <div class="auth-container">
@@ -42,6 +45,11 @@
                         <span>我已阅读并同意 <a href="${pageContext.request.contextPath}/privacy.jsp" target="_blank" rel="noopener noreferrer">隐私政策</a></span>
                     </label>
                 </div>
+                <c:if test="${not empty turnstileSiteKey}">
+                    <div class="form-group">
+                        <div class="cf-turnstile" data-sitekey="${turnstileSiteKey}"></div>
+                    </div>
+                </c:if>
                 <button type="submit" class="btn btn-primary btn-block">注册</button>
             </form>
              <p style="text-align: center; margin-top: 24px; color: var(--text-secondary);">
@@ -52,5 +60,11 @@
             </p>
         </div>
     </div>
+    <c:if test="${not empty nonce}">
+        <script nonce="${nonce}">
+            // 可选：在这里添加需要的内联脚本
+            console.log('注册页面已加载');
+        </script>
+    </c:if>
 </body>
 </html>

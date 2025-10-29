@@ -122,6 +122,162 @@ src/main/resources/
 
 ---
 
+## 环境变量配置
+
+本应用支持以下环境变量进行配置。优先级为：**环境变量 > db.properties 配置文件 > 默认值**
+
+### 数据库配置（必需）
+
+| 环境变量 | 配置文件键 | 默认值 | 说明 |
+|---------|----------|-------|------|
+| `DB_URL` | `db.url` | 无 | MySQL 连接字符串，格式：`jdbc:mysql://host:port/db?params` |
+| `DB_USERNAME` | `db.username` | 无 | 数据库用户名 |
+| `DB_PASSWORD` | `db.password` | 无 | 数据库密码 |
+| `DB_DRIVER` | `db.driver` | `com.mysql.cj.jdbc.Driver` | JDBC 驱动类名 |
+
+### 数据库连接池配置（可选）
+
+| 环境变量 | 配置文件键 | 默认值 | 说明 |
+|---------|----------|-------|------|
+| `DB_POOL_MAX_SIZE` | `db.pool.maximumPoolSize` | `10` | 连接池最大连接数 |
+| `DB_POOL_MIN_IDLE` | `db.pool.minimumIdle` | `2` | 连接池最小空闲连接数 |
+| `DB_POOL_CONN_TIMEOUT` | `db.pool.connectionTimeout` | `30000` | 获取连接超时时间（毫秒） |
+| `DB_POOL_IDLE_TIMEOUT` | `db.pool.idleTimeout` | `600000` | 连接空闲超时时间（毫秒） |
+| `DB_POOL_MAX_LIFETIME` | `db.pool.maxLifetime` | `1800000` | 连接最大生命周期（毫秒） |
+
+### 时区配置（可选）
+
+| 环境变量 | 配置文件键 | 默认值 | 说明 |
+|---------|----------|-------|------|
+| `APP_TIMEZONE` | `app.timezone` | `Asia/Shanghai` | 应用时区，支持格式：`Asia/Shanghai`、`UTC`、`America/New_York` 等 |
+
+### Cloudflare Turnstile 验证配置（可选）
+
+| 环境变量 | 默认值 | 说明 |
+|---------|-------|------|
+| `CF_TURNSTILE_SITE_KEY` | 无 | Cloudflare Turnstile 站点密钥（用于前端） |
+| `CF_TURNSTILE_SECRET` | 无 | Cloudflare Turnstile 秘钥（用于服务端验证） |
+| `CF_TURNSTILE_COOLDOWN_MS` | `600000`（10分钟） | 触发 Turnstile 验证后的冷却时间（毫秒） |
+| `CF_TURNSTILE_TRIGGER_DEFAULT` | `60` | 默认端点触发 Turnstile 的请求阈值 |
+| `CF_TURNSTILE_TRIGGER_LOGIN` | `5` | 登录端点触发 Turnstile 的请求阈值 |
+| `CF_TURNSTILE_TRIGGER_REGISTER` | `3` | 注册端点触发 Turnstile 的请求阈值 |
+| `CF_TURNSTILE_TRIGGER_API` | `40` | API 端点触发 Turnstile 的请求阈值 |
+
+### 文件上传与存储配置（可选）
+
+#### 基础上传配置
+
+| 环境变量 | 默认值 | 说明 |
+|---------|-------|------|
+| `UPLOAD_DIR` | `/uploads` | 本地文件上传目录（绝对或相对路径） |
+| `USE_EXTERNAL_STORAGE` | `false` | 是否使用外部云存储（`true`/`false`） |
+| `STORAGE_TYPE` | `local` | 存储类型：`local`、`oss`、`s3`、`azure`、`gcs` |
+| `CDN_URL` | 无 | CDN URL 前缀，若配置则使用 CDN 加速访问（示例：`https://cdn.example.com/static`） |
+
+#### 阿里云 OSS 配置（当 `STORAGE_TYPE=oss` 时）
+
+| 环境变量 | 说明 |
+|---------|------|
+| `OSS_ENDPOINT` | OSS 服务端点（示例：`oss-cn-hangzhou.aliyuncs.com`） |
+| `OSS_ACCESS_KEY_ID` | 阿里云 Access Key ID |
+| `OSS_ACCESS_KEY_SECRET` | 阿里云 Access Key Secret |
+| `OSS_BUCKET_NAME` | OSS bucket 名称 |
+
+#### AWS S3 配置（当 `STORAGE_TYPE=s3` 时）
+
+| 环境变量 | 说明 |
+|---------|------|
+| `S3_REGION` | AWS 区域代码（示例：`us-east-1`、`eu-west-1`） |
+| `S3_ACCESS_KEY` | AWS Access Key ID |
+| `S3_SECRET_KEY` | AWS Secret Access Key |
+| `S3_BUCKET_NAME` | S3 bucket 名称 |
+
+#### Google Cloud Storage 配置（当 `STORAGE_TYPE=gcs` 时）
+
+| 环境变量 | 说明 |
+|---------|------|
+| `GCS_BUCKET_NAME` | GCS bucket 名称（必需） |
+| `GCS_PROJECT_ID` | GCS 项目 ID（可选） |
+
+#### Azure Blob Storage 配置（当 `STORAGE_TYPE=azure` 时）
+
+| 环境变量 | 说明 |
+|---------|------|
+| `AZURE_STORAGE_CONNECTION_STRING` | Azure 存储连接字符串 |
+| `AZURE_CONTAINER_NAME` | Azure Blob 容器名称 |
+
+### 环境变量使用示例
+
+#### 本地开发环境（使用 db.properties）
+
+```plaintext
+无需设置环境变量，通过 src/main/resources/db.properties 配置数据库连接
+```
+
+#### Docker 容器部署
+
+```bash
+docker run -e DB_URL="jdbc:mysql://mysql:3306/p_card_db?useSSL=false&serverTimezone=Asia/Shanghai" \
+           -e DB_USERNAME="root" \
+           -e DB_PASSWORD="your_password" \
+           -e APP_TIMEZONE="Asia/Shanghai" \
+           -e CF_TURNSTILE_SITE_KEY="your_site_key" \
+           -e CF_TURNSTILE_SECRET="your_secret" \
+           p-card-platform:latest
+```
+
+#### Google Cloud Run 部署（使用 GCS）
+
+```bash
+gcloud run deploy p-card-platform \
+  --set-env-vars DB_URL="jdbc:mysql://sql-instance:3306/p_card_db?useSSL=false" \
+  --set-env-vars DB_USERNAME="root" \
+  --set-env-vars DB_PASSWORD="your_password" \
+  --set-env-vars USE_EXTERNAL_STORAGE="true" \
+  --set-env-vars STORAGE_TYPE="gcs" \
+  --set-env-vars GCS_BUCKET_NAME="p-card-uploads" \
+  --set-env-vars CF_TURNSTILE_SITE_KEY="your_site_key" \
+  --set-env-vars CF_TURNSTILE_SECRET="your_secret"
+```
+
+#### Kubernetes 部署（使用 secrets）
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: p-card-secrets
+type: Opaque
+stringData:
+  DB_URL: "jdbc:mysql://mysql.default:3306/p_card_db"
+  DB_USERNAME: "root"
+  DB_PASSWORD: "your_password"
+  CF_TURNSTILE_SECRET: "your_secret"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p-card-platform
+spec:
+  template:
+    spec:
+      containers:
+      - name: p-card-platform
+        image: p-card-platform:latest
+        envFrom:
+        - secretRef:
+            name: p-card-secrets
+        env:
+        - name: APP_TIMEZONE
+          value: "Asia/Shanghai"
+        - name: STORAGE_TYPE
+          value: "gcs"
+        - name: GCS_BUCKET_NAME
+          value: "p-card-uploads"
+```
+
+---
+
 ## 文件上传与存储
 
 - 上传校验

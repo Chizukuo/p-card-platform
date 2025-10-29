@@ -47,6 +47,28 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
+    <!-- 安全响应头过滤器：添加 HSTS、CSP、X-Content-Type-Options 等 -->
+    <filter>
+        <filter-name>SecurityHeadersFilter</filter-name>
+        <filter-class>com.example.pcard.filter.SecurityHeadersFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>SecurityHeadersFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- 静态资源缓存优化过滤器 -->
+    <filter>
+        <filter-name>StaticCacheHeaderFilter</filter-name>
+        <filter-class>com.example.pcard.filter.StaticCacheHeaderFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>StaticCacheHeaderFilter</filter-name>
+        <url-pattern>/css/*</url-pattern>
+        <url-pattern>/js/*</url-pattern>
+        <url-pattern>/uploads/*</url-pattern>
+    </filter-mapping>
+
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
