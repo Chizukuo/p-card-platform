@@ -39,9 +39,8 @@
                 <div class="form-group">
                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                         <input type="checkbox" id="agreePolicy" name="agreePolicy" required>
-                        <span>我已阅读并同意 <a href="${pageContext.request.contextPath}/privacy.jsp" target="_blank" rel="noopener noreferrer">隐私政策</a>（未勾选将无法注册）</span>
+                        <span>我已阅读并同意 <a href="${pageContext.request.contextPath}/privacy.jsp" target="_blank" rel="noopener noreferrer">隐私政策</a></span>
                     </label>
-                    <small style="color: var(--text-secondary); font-size: 12px; display:block; margin-top:6px;">提示：本站可能展示非个性化广告，不使用您的个人数据进行定向；请勿提交身份证号、银行卡等敏感信息。</small>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">注册</button>
             </form>
