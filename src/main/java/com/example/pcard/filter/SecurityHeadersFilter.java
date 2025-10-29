@@ -34,19 +34,19 @@ public class SecurityHeadersFilter implements Filter {
         // CSP 策略：使用 unsafe-inline 以兼容 Turnstile 和 Rocket Loader
         // 在有 Cloudflare WAF 保护的情况下，这是可接受的权衡
         // img-src: 允许本地、data URL 和 Google Cloud Storage 图片
-        // script-src: 允许本地、unsafe-inline 和 Cloudflare CDN
+        // script-src: 允许本地、unsafe-inline 和 Cloudflare CDN（包括 Analytics/Insights）
         // style-src: 允许本地、unsafe-inline 和 CDN (Font Awesome)
         // font-src: 允许本地和 CDN 字体
         // frame-src: 允许 Turnstile iframe
-        // connect-src: 允许向 Cloudflare 和 Google Cloud Storage 连接
+        // connect-src: 允许向 Cloudflare、Google Cloud Storage 和 Cloudflare Insights 连接
         if (!resp.containsHeader("Content-Security-Policy")) {
             String cspPolicy = "default-src 'self'; " +
                     "img-src 'self' data: https://storage.googleapis.com; " +
-                    "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cdnjs.cloudflare.com https://ajax.cloudflare.com; " +
+                    "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cdnjs.cloudflare.com https://ajax.cloudflare.com https://static.cloudflareinsights.com; " +
                     "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; " +
                     "font-src 'self' https://cdnjs.cloudflare.com; " +
                     "frame-src https://challenges.cloudflare.com; " +
-                    "connect-src 'self' https://challenges.cloudflare.com https://storage.googleapis.com; " +
+                    "connect-src 'self' https://challenges.cloudflare.com https://storage.googleapis.com https://cloudflareinsights.com; " +
                     "object-src 'none'; " +
                     "base-uri 'self'";
             resp.setHeader("Content-Security-Policy", cspPolicy);
