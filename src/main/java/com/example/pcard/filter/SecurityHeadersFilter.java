@@ -36,19 +36,21 @@ public class SecurityHeadersFilter implements Filter {
         String nonce = UUID.randomUUID().toString();
         req.setAttribute("nonce", nonce);
 
-        // CSP 策略：使用 nonce 替代 unsafe-inline，增强 XSS 防护
-        // img-src 'self' data: - 允许本地和数据 URL 图像（如 base64 编码）
-        // script-src 'self' 'nonce-{nonce}' - 仅允许本地脚本和带 nonce 的内联脚本
-        // style-src 'self' 'nonce-{nonce}' 'unsafe-inline' - 允许本地样式和带 nonce 的内联样式（Turnstile 需要 unsafe-inline）
-        // frame-src https://challenges.cloudflare.com - 允许 Turnstile iframe
-        // connect-src 'self' https://challenges.cloudflare.com - 允许向 Cloudflare Turnstile 连接
+        // CSP 策略：允许必要的外部资源和 Turnstile
+        // img-src: 允许本地、data URL 和 Google Cloud Storage 图片
+        // script-src: 允许本地、nonce、unsafe-inline 和 Cloudflare
+        // style-src: 允许本地、nonce、unsafe-inline 和 CDN (Font Awesome)
+        // font-src: 允许本地和 CDN 字体
+        // frame-src: 允许 Turnstile iframe
+        // connect-src: 允许向 Cloudflare Turnstile 和 Google Cloud Storage 连接
         if (!resp.containsHeader("Content-Security-Policy")) {
             String cspPolicy = "default-src 'self'; " +
-                    "img-src 'self' data:; " +
-                    "script-src 'self' 'nonce-" + nonce + "' https://challenges.cloudflare.com; " +
-                    "style-src 'self' 'nonce-" + nonce + "' 'unsafe-inline'; " +
+                    "img-src 'self' data: https://storage.googleapis.com; " +
+                    "script-src 'self' 'nonce-" + nonce + "' 'unsafe-inline' https://challenges.cloudflare.com https://cdnjs.cloudflare.com; " +
+                    "style-src 'self' 'nonce-" + nonce + "' 'unsafe-inline' https://cdnjs.cloudflare.com; " +
+                    "font-src 'self' https://cdnjs.cloudflare.com; " +
                     "frame-src https://challenges.cloudflare.com; " +
-                    "connect-src 'self' https://challenges.cloudflare.com; " +
+                    "connect-src 'self' https://challenges.cloudflare.com https://storage.googleapis.com; " +
                     "object-src 'none'; " +
                     "base-uri 'self'";
             resp.setHeader("Content-Security-Policy", cspPolicy);

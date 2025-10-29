@@ -61,7 +61,7 @@
                     <div class="form-group">
                         <div class="cf-turnstile" data-sitekey="<%= siteKey %>"></div>
                     </div>
-                    <button type="button" onclick="testValidation()" class="btn btn-primary btn-block">测试验证</button>
+                    <button type="button" id="testBtn" class="btn btn-primary btn-block">测试验证</button>
                 </form>
             <% } %>
 
@@ -72,6 +72,14 @@
     </div>
 
     <script>
+        // 使用事件监听器而不是内联事件处理器
+        document.addEventListener('DOMContentLoaded', function() {
+            const testBtn = document.getElementById('testBtn');
+            if (testBtn) {
+                testBtn.addEventListener('click', testValidation);
+            }
+        });
+
         function testValidation() {
             const token = document.querySelector('[name="cf-turnstile-response"]');
             if (token && token.value) {
