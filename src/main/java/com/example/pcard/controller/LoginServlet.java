@@ -35,8 +35,17 @@ public class LoginServlet extends HttpServlet {
             req.setAttribute("redirect", redirect);
         }
         // Turnstile 站点 key（仅在达到触发条件时启用）
-        if (TurnstileVerifier.isEnabled() && TurnstileGate.isRequired(req)) {
-            req.setAttribute("turnstileSiteKey", TurnstileVerifier.getSiteKey());
+        boolean isEnabled = TurnstileVerifier.isEnabled();
+        boolean isRequired = TurnstileGate.isRequired(req);
+        String siteKey = TurnstileVerifier.getSiteKey();
+        
+        // 调试日志
+        logger.debug("登录页面 - Turnstile 状态: enabled={}, required={}, siteKey={}, sessionId={}", 
+            isEnabled, isRequired, siteKey != null ? "已配置" : "未配置", req.getSession().getId());
+        
+        if (isEnabled && isRequired) {
+            req.setAttribute("turnstileSiteKey", siteKey);
+            logger.info("Turnstile 已启用，Session: {}", req.getSession().getId());
         }
         req.getRequestDispatcher("login.jsp").forward(req, resp);
     }

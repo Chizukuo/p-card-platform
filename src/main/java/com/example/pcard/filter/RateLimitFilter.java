@@ -121,6 +121,8 @@ public class RateLimitFilter implements Filter {
 
         if (current >= challengeTrigger) {
             TurnstileGate.requireForDuration(req, CHALLENGE_COOLDOWN_MS);
+            logger.info("触发 Turnstile 要求: IP={}, URI={}, count={}/{}, sessionId={}", 
+                clientIp, req.getRequestURI(), current, challengeTrigger, req.getSession().getId());
         }
 
         boolean allowed = current <= limit;
