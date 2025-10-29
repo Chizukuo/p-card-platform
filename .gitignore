@@ -1,0 +1,60 @@
+# Compiled class files
+*.class
+target/
+*.war
+*.ear
+
+# Log files
+logs/
+*.log
+
+# Maven
+.mvn/
+mvn.cmd
+mvnw
+mvnw.cmd
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Tomcat
+.smarttomcat/
+
+# Database config (contains sensitive info)
+src/main/resources/db.properties
+
+# Uploaded files
+src/main/webapp/uploads/*
+!src/main/webapp/uploads/.gitkeep
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp_bcrypt/
+*.tmp
+*.bak
+*~
+
+# Docker 相关文件
+.env
+docker-compose.override.yml
+
+# SSL 证书
+ssl/*.pem
+ssl/*.key
+ssl/*.crt
+
+# Docker volumes
+docker/mysql/data/
+
+# 备份文件
+backups/
+*.sql.gz
+*.tar.gz

@@ -1,0 +1,69 @@
+# Google Cloud Build 配置文件
+# 用于自动构建和部署 P-Card Platform 到 Cloud Run
+
+steps:
+  # 步骤 1: 构建 Docker 镜像
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/p-card-platform:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/p-card-platform:latest'
+      - '-f'
+      - 'Dockerfile'
+      - '.'
+    timeout: 1200s
+
+  # 步骤 2: 推送镜像到 Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/p-card-platform:$COMMIT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/p-card-platform:latest'
+
+  # 步骤 3: 部署到 Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'p-card-platform'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/p-card-platform:$COMMIT_SHA'
+      - '--region'
+      - 'asia-northeast2'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--max-instances'
+      - '10'
+      - '--min-instances'
+      - '1'
+      - '--timeout'
+      - '300'
+      - '--concurrency'
+      - '80'
+
+# 镜像会被推送到 Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/p-card-platform:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/p-card-platform:latest'
+
+# 构建选项
+options:
+  machineType: 'N1_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+  
+# 构建超时时间 (20 分钟)
+timeout: 1200s

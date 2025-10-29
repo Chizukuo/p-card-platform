@@ -1,0 +1,19 @@
+# Database Configuration Template
+# Copy this file to db.properties and configure with your settings
+
+db.url=jdbc:mysql://localhost:3306/p_card_db?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+db.username=root
+db.password=YOUR_PASSWORD_HERE
+db.driver=com.mysql.cj.jdbc.Driver
+
+# Application Timezone Configuration
+# 支持的时区格式: Asia/Shanghai, UTC, America/New_York, Europe/London 等
+# 也可通过环境变量 APP_TIMEZONE 覆盖此配置
+app.timezone=Asia/Shanghai
+
+# HikariCP Connection Pool Settings
+db.pool.maximumPoolSize=10
+db.pool.minimumIdle=2
+db.pool.connectionTimeout=30000
+db.pool.idleTimeout=600000
+db.pool.maxLifetime=1800000
