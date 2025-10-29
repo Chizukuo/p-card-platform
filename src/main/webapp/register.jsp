@@ -60,11 +60,5 @@
             </p>
         </div>
     </div>
-    <c:if test="${not empty nonce}">
-        <script nonce="${nonce}">
-            // 可选：在这里添加需要的内联脚本
-            console.log('注册页面已加载');
-        </script>
-    </c:if>
 </body>
 </html>
