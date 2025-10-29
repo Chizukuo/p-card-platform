@@ -1,6 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.example.pcard.util.TurnstileVerifier" %>
 <%@ page import="com.example.pcard.util.TurnstileGate" %>
+<%
+    // 强制触发 Turnstile（用于测试）
+    TurnstileGate.requireForDuration(request, 10 * 60 * 1000L); // 10分钟
+    String siteKey = TurnstileVerifier.getSiteKey();
+    boolean enabled = TurnstileVerifier.isEnabled();
+    boolean required = TurnstileGate.isRequired(request);
+%>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -8,13 +15,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Turnstile 测试页面</title>
     <link rel="stylesheet" href="css/style.css">
-    <%
-        // 强制触发 Turnstile（用于测试）
-        TurnstileGate.requireForDuration(request, 10 * 60 * 1000L); // 10分钟
-        String siteKey = TurnstileVerifier.getSiteKey();
-        boolean enabled = TurnstileVerifier.isEnabled();
-        boolean required = TurnstileGate.isRequired(request);
-    %>
     <% if (enabled && siteKey != null && !siteKey.isEmpty()) { %>
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <% } %>
@@ -80,6 +80,26 @@
                 alert('❌ 请先完成 Turnstile 验证');
             }
         }
+
+        // 调试：监听错误
+        window.addEventListener('error', function(e) {
+            console.error('页面错误:', e);
+        });
+
+        // 调试：检查 Turnstile 是否加载
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const turnstileWidget = document.querySelector('.cf-turnstile');
+                const turnstileFrame = document.querySelector('iframe[src*="cloudflare"]');
+                console.log('Turnstile Widget:', turnstileWidget);
+                console.log('Turnstile iFrame:', turnstileFrame);
+                console.log('window.turnstile:', window.turnstile);
+                
+                if (!turnstileFrame && turnstileWidget) {
+                    console.warn('⚠️ Turnstile 小部件存在但 iframe 未加载！可能是 CSP 或脚本加载问题。');
+                }
+            }, 2000);
+        });
     </script>
 </body>
 </html>

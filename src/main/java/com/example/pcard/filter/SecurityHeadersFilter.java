@@ -39,13 +39,15 @@ public class SecurityHeadersFilter implements Filter {
         // CSP 策略：使用 nonce 替代 unsafe-inline，增强 XSS 防护
         // img-src 'self' data: - 允许本地和数据 URL 图像（如 base64 编码）
         // script-src 'self' 'nonce-{nonce}' - 仅允许本地脚本和带 nonce 的内联脚本
-        // style-src 'self' 'nonce-{nonce}' - 仅允许本地样式和带 nonce 的内联样式
+        // style-src 'self' 'nonce-{nonce}' 'unsafe-inline' - 允许本地样式和带 nonce 的内联样式（Turnstile 需要 unsafe-inline）
+        // frame-src https://challenges.cloudflare.com - 允许 Turnstile iframe
         // connect-src 'self' https://challenges.cloudflare.com - 允许向 Cloudflare Turnstile 连接
         if (!resp.containsHeader("Content-Security-Policy")) {
             String cspPolicy = "default-src 'self'; " +
                     "img-src 'self' data:; " +
-                    "script-src 'self' 'nonce-" + nonce + "' https://challenges.cloudflare.com/turnstile/; " +
-                    "style-src 'self' 'nonce-" + nonce + "'; " +
+                    "script-src 'self' 'nonce-" + nonce + "' https://challenges.cloudflare.com; " +
+                    "style-src 'self' 'nonce-" + nonce + "' 'unsafe-inline'; " +
+                    "frame-src https://challenges.cloudflare.com; " +
                     "connect-src 'self' https://challenges.cloudflare.com; " +
                     "object-src 'none'; " +
                     "base-uri 'self'";
