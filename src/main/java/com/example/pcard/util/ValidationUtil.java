@@ -41,8 +41,31 @@ public class ValidationUtil {
     }
 
     /**
+     * 获取用户名验证失败的具体原因
+     * @param username 用户名
+     * @return 验证失败原因,如果用户名有效则返回null
+     */
+    public static String getUsernameValidationError(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return "用户名不能为空";
+        }
+        // 使用trim后的用户名进行验证，确保一致性
+        String trimmedUsername = username.trim();
+        if (trimmedUsername.length() < 4) {
+            return "用户名长度至少为4位";
+        }
+        if (trimmedUsername.length() > 20) {
+            return "用户名长度不能超过20位";
+        }
+        if (!trimmedUsername.matches("^[a-zA-Z0-9_]+$")) {
+            return "用户名只能包含字母、数字和下划线";
+        }
+        return null;
+    }
+
+    /**
      * 验证密码强度
-     * 要求:至少8位字符
+     * 要求:至少8位字符,必须包含字母和数字
      * @param password 密码
      * @return 验证结果
      */
@@ -50,7 +73,46 @@ public class ValidationUtil {
         if (password == null || password.isEmpty()) {
             return false;
         }
-        return password.length() >= 8;
+        // 使用单个正则表达式检查所有要求：
+        // (?=.*[a-zA-Z]) - 必须包含至少一个字母
+        // (?=.*[0-9]) - 必须包含至少一个数字
+        // .{8,} - 最少8位字符
+        return password.matches("^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$");
+    }
+
+    /**
+     * 获取密码验证失败的具体原因
+     * @param password 密码
+     * @return 验证失败原因,如果密码有效则返回null
+     */
+    public static String getPasswordValidationError(String password) {
+        if (password == null || password.isEmpty()) {
+            return "密码不能为空";
+        }
+        if (password.length() < 8) {
+            return "密码长度至少为8位";
+        }
+        // 避免ReDoS，使用简单的字符串遍历而不是复杂正则
+        boolean hasLetter = false;
+        boolean hasDigit = false;
+        for (char c : password.toCharArray()) {
+            if (Character.isLetter(c)) {
+                hasLetter = true;
+            }
+            if (Character.isDigit(c)) {
+                hasDigit = true;
+            }
+            if (hasLetter && hasDigit) {
+                break;
+            }
+        }
+        if (!hasLetter) {
+            return "密码必须包含至少一个字母";
+        }
+        if (!hasDigit) {
+            return "密码必须包含至少一个数字";
+        }
+        return null;
     }
 
     /**
