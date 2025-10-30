@@ -90,10 +90,24 @@ public class ValidationUtil {
         if (password.length() < 8) {
             return "密码长度至少为8位";
         }
-        if (!password.matches(".*[a-zA-Z].*")) {
+        // 避免ReDoS，使用简单的字符串遍历而不是复杂正则
+        boolean hasLetter = false;
+        boolean hasDigit = false;
+        for (char c : password.toCharArray()) {
+            if (Character.isLetter(c)) {
+                hasLetter = true;
+            }
+            if (Character.isDigit(c)) {
+                hasDigit = true;
+            }
+            if (hasLetter && hasDigit) {
+                break;
+            }
+        }
+        if (!hasLetter) {
             return "密码必须包含至少一个字母";
         }
-        if (!password.matches(".*[0-9].*")) {
+        if (!hasDigit) {
             return "密码必须包含至少一个数字";
         }
         return null;
