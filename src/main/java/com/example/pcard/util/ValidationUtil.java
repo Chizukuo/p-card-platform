@@ -49,13 +49,15 @@ public class ValidationUtil {
         if (username == null || username.trim().isEmpty()) {
             return "用户名不能为空";
         }
-        if (username.length() < 4) {
+        // 使用trim后的用户名进行验证，确保一致性
+        String trimmedUsername = username.trim();
+        if (trimmedUsername.length() < 4) {
             return "用户名长度至少为4位";
         }
-        if (username.length() > 20) {
+        if (trimmedUsername.length() > 20) {
             return "用户名长度不能超过20位";
         }
-        if (!username.matches("^[a-zA-Z0-9_]+$")) {
+        if (!trimmedUsername.matches("^[a-zA-Z0-9_]+$")) {
             return "用户名只能包含字母、数字和下划线";
         }
         return null;
