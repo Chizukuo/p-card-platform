@@ -1,5 +1,14 @@
 # 偶像大师粉丝名片交互平台（Java Web 作业）
 
+[![Java](https://img.shields.io/badge/Java-17-007396?logo=openjdk&logoColor=white)](pom.xml)
+[![Build](https://img.shields.io/badge/Build-Maven-C71A36?logo=apachemaven&logoColor=white)](pom.xml)
+[![Servlet](https://img.shields.io/badge/Servlet-4.0-6DB33F)](#)
+[![JSP](https://img.shields.io/badge/JSP-2.3-FF7800)](#)
+[![Database](https://img.shields.io/badge/Database-MySQL-4479A1?logo=mysql&logoColor=white)](database/init.sql)
+[![Packaging](https://img.shields.io/badge/Packaging-WAR-2C3E50)](#)
+[![Container](https://img.shields.io/badge/Container-Docker-2496ED?logo=docker&logoColor=white)](Dockerfile)
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+
 本项目是一个面向偶像大师（THE IDOLM@STER）社群的电子粉丝名片互动平台，聚焦“名片展示、分享与评论”三大核心能力。实现采用标准 Java Servlet + JSP 技术栈，配合 HikariCP 连接池、Logback 日志与多层架构（Controller/Filter/DAO/Model），强调安全、可扩展与清晰的数据流。
 
 > 说明：本文档仅介绍实现与设计，不包含任何部署或运行步骤。
