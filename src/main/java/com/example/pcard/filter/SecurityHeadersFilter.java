@@ -19,6 +19,16 @@ public class SecurityHeadersFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
+        // SEO 控制：只允许首页被搜索引擎索引
+        String requestURI = req.getRequestURI();
+        String contextPath = req.getContextPath();
+        String path = requestURI.substring(contextPath.length());
+        
+        // 只有根路径（首页）允许索引，其他页面都禁止
+        if (!path.equals("/") && !path.equals("")) {
+            resp.setHeader("X-Robots-Tag", "noindex, nofollow");
+        }
+
         // HSTS 仅在 HTTPS 有效；在 CF 终止 TLS 的场景，已通过 Cloudflare 下发也可；这里兜底
         if (req.isSecure()) {
             // 一年，包含子域，预加载（按需）

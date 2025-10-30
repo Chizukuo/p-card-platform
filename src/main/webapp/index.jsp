@@ -8,7 +8,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>P-Card 电子名片平台</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>P-Card 电子名片平台 - 制作人的专属名片墙</title>
+    <meta name="description" content="P-Card电子名片平台，为制作人打造专属的数字名片墙，分享你的担当信息和制作人身份。">
+    <meta name="keywords" content="P-Card,电子名片,名片墙,制作人,担当,偶像">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${pageContext.request.scheme}://${pageContext.request.serverName}${pageContext.request.contextPath}/">
+    <meta property="og:title" content="P-Card 电子名片平台 - 制作人的专属名片墙">
+    <meta property="og:description" content="P-Card电子名片平台，为制作人打造专属的数字名片墙，分享你的担当信息和制作人身份。">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="${pageContext.request.scheme}://${pageContext.request.serverName}${pageContext.request.contextPath}/">
+    <meta property="twitter:title" content="P-Card 电子名片平台 - 制作人的专属名片墙">
+    <meta property="twitter:description" content="P-Card电子名片平台，为制作人打造专属的数字名片墙，分享你的担当信息和制作人身份。">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="${pageContext.request.scheme}://${pageContext.request.serverName}${pageContext.request.contextPath}/">
+    
     <link rel="stylesheet" href="css/style.css">
     <style>
         /* 首页专属样式 */
