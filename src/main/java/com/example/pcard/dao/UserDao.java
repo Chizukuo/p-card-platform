@@ -2,6 +2,7 @@ package com.example.pcard.dao;
 
 import com.example.pcard.model.User;
 import com.example.pcard.util.DbUtil;
+import com.example.pcard.util.ChineseConverter;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -112,6 +113,7 @@ public class UserDao {
 
     /**
      * 搜索用户
+     * 支持简繁体互相匹配
      * @param q 搜索关键词
      * @param role 角色筛选
      * @param status 状态筛选
@@ -124,9 +126,25 @@ public class UserDao {
         List<Object> params = new ArrayList<>();
 
         if (q != null && !q.trim().isEmpty()) {
-            sql.append(" AND LOWER(username) LIKE ?");
-            params.add("%" + q.trim().toLowerCase() + "%");
+            q = q.trim();
+            
+            // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
+            String[] searchVariants;
+            if (ChineseConverter.containsChinese(q)) {
+                searchVariants = ChineseConverter.getSearchVariants(q);
+            } else {
+                searchVariants = new String[]{q};
+            }
+            
+            // 构建动态搜索条件
+            List<String> conditions = new ArrayList<>();
+            for (String variant : searchVariants) {
+                conditions.add("LOWER(username) LIKE ?");
+                params.add("%" + variant.toLowerCase() + "%");
+            }
+            sql.append(" AND (").append(String.join(" OR ", conditions)).append(")");
         }
+        
         if (role != null && !role.trim().isEmpty() && !"all".equalsIgnoreCase(role)) {
             sql.append(" AND role = ?");
             params.add(role);
@@ -153,6 +171,7 @@ public class UserDao {
 
     /**
      * 分页搜索用户
+     * 支持简繁体互相匹配
      * @param q 搜索关键词
      * @param role 角色筛选
      * @param status 状态筛选
@@ -167,9 +186,25 @@ public class UserDao {
         List<Object> params = new ArrayList<>();
 
         if (q != null && !q.trim().isEmpty()) {
-            sql.append(" AND LOWER(username) LIKE ?");
-            params.add("%" + q.trim().toLowerCase() + "%");
+            q = q.trim();
+            
+            // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
+            String[] searchVariants;
+            if (ChineseConverter.containsChinese(q)) {
+                searchVariants = ChineseConverter.getSearchVariants(q);
+            } else {
+                searchVariants = new String[]{q};
+            }
+            
+            // 构建动态搜索条件
+            List<String> conditions = new ArrayList<>();
+            for (String variant : searchVariants) {
+                conditions.add("LOWER(username) LIKE ?");
+                params.add("%" + variant.toLowerCase() + "%");
+            }
+            sql.append(" AND (").append(String.join(" OR ", conditions)).append(")");
         }
+        
         if (role != null && !role.trim().isEmpty() && !"all".equalsIgnoreCase(role)) {
             sql.append(" AND role = ?");
             params.add(role);
@@ -199,6 +234,7 @@ public class UserDao {
 
     /**
      * 统计符合条件的用户数量
+     * 支持简繁体互相匹配
      * @param q 搜索关键词
      * @param role 角色筛选
      * @param status 状态筛选
@@ -210,9 +246,25 @@ public class UserDao {
         List<Object> params = new ArrayList<>();
 
         if (q != null && !q.trim().isEmpty()) {
-            sql.append(" AND LOWER(username) LIKE ?");
-            params.add("%" + q.trim().toLowerCase() + "%");
+            q = q.trim();
+            
+            // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
+            String[] searchVariants;
+            if (ChineseConverter.containsChinese(q)) {
+                searchVariants = ChineseConverter.getSearchVariants(q);
+            } else {
+                searchVariants = new String[]{q};
+            }
+            
+            // 构建动态搜索条件
+            List<String> conditions = new ArrayList<>();
+            for (String variant : searchVariants) {
+                conditions.add("LOWER(username) LIKE ?");
+                params.add("%" + variant.toLowerCase() + "%");
+            }
+            sql.append(" AND (").append(String.join(" OR ", conditions)).append(")");
         }
+        
         if (role != null && !role.trim().isEmpty() && !"all".equalsIgnoreCase(role)) {
             sql.append(" AND role = ?");
             params.add(role);

@@ -2,6 +2,7 @@ package com.example.pcard.dao;
 
 import com.example.pcard.model.Card;
 import com.example.pcard.util.DbUtil;
+import com.example.pcard.util.ChineseConverter;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -219,21 +220,49 @@ public class CardDao {
 
     /**
      * 模糊搜索公开卡片（producer_name / idol_name / region / unique_link_id）。
-     * 使用参数化查询并限制返回数量以避免扫描过多记录。
+     * 支持简繁体互相匹配，使用参数化查询并限制返回数量以避免扫描过多记录。
+     * 性能优化：先检查是否包含中文，仅在必要时生成简繁体变体
      */
     public List<Card> searchPublicCards(String query) throws SQLException {
         List<Card> cards = new ArrayList<>();
         if (query == null) query = "";
-        String q = "%" + query.toLowerCase().trim() + "%";
-        String sql = "SELECT c.*, u.username FROM cards c JOIN users u ON c.user_id = u.id " +
-                "WHERE (c.visibility IS NULL OR c.visibility = 'PUBLIC') " +
-                "AND (LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ?) " +
-                "ORDER BY c.id DESC LIMIT 100"; // 安全上限，避免一次返回过多
-        try (Connection conn = DbUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, q);
-            ps.setString(2, q);
-            ps.setString(3, q);
-            ps.setString(4, q);
+        query = query.trim();
+        if (query.isEmpty()) {
+            return cards;
+        }
+        
+        // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
+        String[] searchVariants;
+        if (ChineseConverter.containsChinese(query)) {
+            searchVariants = ChineseConverter.getSearchVariants(query);
+        } else {
+            searchVariants = new String[]{query};
+        }
+        
+        // 构建动态SQL，根据变体数量调整OR条件
+        StringBuilder sql = new StringBuilder(
+            "SELECT c.*, u.username FROM cards c " +
+            "JOIN users u ON c.user_id = u.id " +
+            "WHERE (c.visibility IS NULL OR c.visibility = 'PUBLIC') AND ("
+        );
+        
+        List<String> conditions = new ArrayList<>();
+        for (int i = 0; i < searchVariants.length; i++) {
+            conditions.add("(LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ?)");
+        }
+        sql.append(String.join(" OR ", conditions));
+        sql.append(") ORDER BY c.id DESC LIMIT 100"); // 安全上限
+        
+        try (Connection conn = DbUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            for (String variant : searchVariants) {
+                String pattern = "%" + variant.toLowerCase() + "%";
+                ps.setString(paramIndex++, pattern);
+                ps.setString(paramIndex++, pattern);
+                ps.setString(paramIndex++, pattern);
+                ps.setString(paramIndex++, pattern);
+            }
+            
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Card card = mapRowToCard(rs);
@@ -248,18 +277,45 @@ public class CardDao {
     public List<Card> searchPublicCardsPaged(String query, int offset, int limit) throws SQLException {
         List<Card> cards = new ArrayList<>();
         if (query == null) query = "";
-        String q = "%" + query.toLowerCase().trim() + "%";
-        String sql = "SELECT c.*, u.username FROM cards c JOIN users u ON c.user_id = u.id " +
-                "WHERE (c.visibility IS NULL OR c.visibility = 'PUBLIC') " +
-                "AND (LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ?) " +
-                "ORDER BY c.id DESC LIMIT ? OFFSET ?";
-        try (Connection conn = DbUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, q);
-            ps.setString(2, q);
-            ps.setString(3, q);
-            ps.setString(4, q);
-            ps.setInt(5, limit);
-            ps.setInt(6, offset);
+        query = query.trim();
+        if (query.isEmpty()) {
+            return getPublicCardsPaged(offset, limit);
+        }
+        
+        // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
+        String[] searchVariants;
+        if (ChineseConverter.containsChinese(query)) {
+            searchVariants = ChineseConverter.getSearchVariants(query);
+        } else {
+            searchVariants = new String[]{query};
+        }
+        
+        // 构建动态SQL，根据变体数量调整OR条件
+        StringBuilder sql = new StringBuilder(
+            "SELECT c.*, u.username FROM cards c " +
+            "JOIN users u ON c.user_id = u.id " +
+            "WHERE (c.visibility IS NULL OR c.visibility = 'PUBLIC') AND ("
+        );
+        
+        List<String> conditions = new ArrayList<>();
+        for (int i = 0; i < searchVariants.length; i++) {
+            conditions.add("(LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ?)");
+        }
+        sql.append(String.join(" OR ", conditions));
+        sql.append(") ORDER BY c.id DESC LIMIT ? OFFSET ?");
+        
+        try (Connection conn = DbUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            for (String variant : searchVariants) {
+                String pattern = "%" + variant.toLowerCase() + "%";
+                ps.setString(paramIndex++, pattern);
+                ps.setString(paramIndex++, pattern);
+                ps.setString(paramIndex++, pattern);
+                ps.setString(paramIndex++, pattern);
+            }
+            ps.setInt(paramIndex++, limit);
+            ps.setInt(paramIndex, offset);
+            
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Card card = mapRowToCard(rs);
@@ -272,16 +328,33 @@ public class CardDao {
     }
 
     // Admin: search cards with optional visibility, and match owner username too
+    // 支持简繁体搜索
     public List<Card> adminSearchCards(String q, String visibility) throws SQLException {
         List<Card> cards = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT c.*, u.username FROM cards c JOIN users u ON c.user_id = u.id WHERE 1=1");
         List<Object> params = new ArrayList<>();
 
         if (q != null && !q.trim().isEmpty()) {
-            String like = "%" + q.trim().toLowerCase() + "%";
-            sql.append(" AND (LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ? OR LOWER(u.username) LIKE ?)");
-            params.add(like); params.add(like); params.add(like); params.add(like); params.add(like);
+            q = q.trim();
+            
+            // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
+            String[] searchVariants;
+            if (ChineseConverter.containsChinese(q)) {
+                searchVariants = ChineseConverter.getSearchVariants(q);
+            } else {
+                searchVariants = new String[]{q};
+            }
+            
+            // 构建动态搜索条件
+            List<String> conditions = new ArrayList<>();
+            for (String variant : searchVariants) {
+                String like = "%" + variant.toLowerCase() + "%";
+                conditions.add("(LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ? OR LOWER(u.username) LIKE ?)");
+                params.add(like); params.add(like); params.add(like); params.add(like); params.add(like);
+            }
+            sql.append(" AND (").append(String.join(" OR ", conditions)).append(")");
         }
+        
         if (visibility != null && !visibility.trim().isEmpty() && !"all".equalsIgnoreCase(visibility)) {
             sql.append(" AND c.visibility = ?");
             params.add(visibility);
@@ -309,10 +382,26 @@ public class CardDao {
         List<Object> params = new ArrayList<>();
 
         if (q != null && !q.trim().isEmpty()) {
-            String like = "%" + q.trim().toLowerCase() + "%";
-            sql.append(" AND (LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ? OR LOWER(u.username) LIKE ?)");
-            params.add(like); params.add(like); params.add(like); params.add(like); params.add(like);
+            q = q.trim();
+            
+            // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
+            String[] searchVariants;
+            if (ChineseConverter.containsChinese(q)) {
+                searchVariants = ChineseConverter.getSearchVariants(q);
+            } else {
+                searchVariants = new String[]{q};
+            }
+            
+            // 构建动态搜索条件
+            List<String> conditions = new ArrayList<>();
+            for (String variant : searchVariants) {
+                String like = "%" + variant.toLowerCase() + "%";
+                conditions.add("(LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ? OR LOWER(u.username) LIKE ?)");
+                params.add(like); params.add(like); params.add(like); params.add(like); params.add(like);
+            }
+            sql.append(" AND (").append(String.join(" OR ", conditions)).append(")");
         }
+        
         if (visibility != null && !visibility.trim().isEmpty() && !"all".equalsIgnoreCase(visibility)) {
             sql.append(" AND c.visibility = ?");
             params.add(visibility);
@@ -320,7 +409,8 @@ public class CardDao {
         sql.append(" ORDER BY c.id DESC LIMIT ? OFFSET ?");
 
         try (Connection conn = DbUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            int i = 1; for (Object p : params) ps.setObject(i++, p);
+            int i = 1; 
+            for (Object p : params) ps.setObject(i++, p);
             ps.setInt(i++, limit);
             ps.setInt(i, offset);
             try (ResultSet rs = ps.executeQuery()) {
@@ -346,15 +436,33 @@ public class CardDao {
     public int countAdminCards(String q, String visibility) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM cards c JOIN users u ON c.user_id = u.id WHERE 1=1");
         List<Object> params = new ArrayList<>();
+        
         if (q != null && !q.trim().isEmpty()) {
-            String like = "%" + q.trim().toLowerCase() + "%";
-            sql.append(" AND (LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ? OR LOWER(u.username) LIKE ?)");
-            params.add(like); params.add(like); params.add(like); params.add(like); params.add(like);
+            q = q.trim();
+            
+            // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
+            String[] searchVariants;
+            if (ChineseConverter.containsChinese(q)) {
+                searchVariants = ChineseConverter.getSearchVariants(q);
+            } else {
+                searchVariants = new String[]{q};
+            }
+            
+            // 构建动态搜索条件
+            List<String> conditions = new ArrayList<>();
+            for (String variant : searchVariants) {
+                String like = "%" + variant.toLowerCase() + "%";
+                conditions.add("(LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ? OR LOWER(u.username) LIKE ?)");
+                params.add(like); params.add(like); params.add(like); params.add(like); params.add(like);
+            }
+            sql.append(" AND (").append(String.join(" OR ", conditions)).append(")");
         }
+        
         if (visibility != null && !visibility.trim().isEmpty() && !"all".equalsIgnoreCase(visibility)) {
             sql.append(" AND c.visibility = ?");
             params.add(visibility);
         }
+        
         try (Connection conn = DbUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int i = 1; for (Object p : params) ps.setObject(i++, p);
             try (ResultSet rs = ps.executeQuery()) { if (rs.next()) return rs.getInt(1); }
