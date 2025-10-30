@@ -355,6 +355,22 @@ public class UserDao {
     }
 
     /**
+     * 更新用户昵称
+     * @param userId 用户ID
+     * @param nickname 新昵称
+     * @throws SQLException 数据库操作异常
+     */
+    public void updateUserNickname(int userId, String nickname) throws SQLException {
+        String sql = "UPDATE users SET nickname = ? WHERE id = ?";
+        try (Connection conn = DbUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, nickname);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
      * 删除用户
      * @param userId 用户ID
      * @throws SQLException 数据库操作异常

@@ -24,6 +24,10 @@ public class Comment {
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private List<Comment> replies = new ArrayList<>();
+    
+    // 管理员视图使用的额外字段
+    private String ownerUsername;  // 名片所有者用户名
+    private String cardTitle;      // 名片标题(P名)
 
     public int getId() {
         return id;
@@ -123,6 +127,22 @@ public class Comment {
 
     public void addReply(Comment reply) {
         this.replies.add(reply);
+    }
+
+    public String getOwnerUsername() {
+        return ownerUsername;
+    }
+
+    public void setOwnerUsername(String ownerUsername) {
+        this.ownerUsername = ownerUsername;
+    }
+
+    public String getCardTitle() {
+        return cardTitle;
+    }
+
+    public void setCardTitle(String cardTitle) {
+        this.cardTitle = cardTitle;
     }
 
     /**

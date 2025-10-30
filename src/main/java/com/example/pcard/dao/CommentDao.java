@@ -126,6 +126,94 @@ public class CommentDao {
     }
 
     /**
+     * 获取所有评论(扁平列表,用于管理员查看)
+     * @param searchQuery 搜索关键词
+     * @param offset 偏移量
+     * @param limit 每页数量
+     * @return 评论列表
+     * @throws SQLException 数据库操作异常
+     */
+    public List<Comment> getAllCommentsFlat(String searchQuery, int offset, int limit) throws SQLException {
+        List<Comment> comments = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT c.*, u.username as owner_username, card.producer_name " +
+            "FROM comments c " +
+            "JOIN users u ON c.user_id = u.id " +
+            "JOIN cards card ON c.card_id = card.id " +
+            "WHERE 1=1"
+        );
+        List<Object> params = new ArrayList<>();
+        
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            sql.append(" AND (LOWER(c.content) LIKE ? OR LOWER(c.username) LIKE ? OR LOWER(card.producer_name) LIKE ?)");
+            String pattern = "%" + searchQuery.toLowerCase() + "%";
+            params.add(pattern);
+            params.add(pattern);
+            params.add(pattern);
+        }
+        
+        sql.append(" ORDER BY c.created_at DESC LIMIT ? OFFSET ?");
+        
+        try (Connection conn = DbUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (Object p : params) {
+                ps.setObject(i++, p);
+            }
+            ps.setInt(i++, limit);
+            ps.setInt(i, offset);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Comment comment = mapRowToComment(rs);
+                    // 添加额外信息用于显示
+                    comment.setOwnerUsername(rs.getString("owner_username"));
+                    comment.setCardTitle(rs.getString("producer_name"));
+                    comments.add(comment);
+                }
+            }
+        }
+        return comments;
+    }
+
+    /**
+     * 统计所有评论数量
+     * @param searchQuery 搜索关键词
+     * @return 评论数量
+     * @throws SQLException 数据库操作异常
+     */
+    public int countAllComments(String searchQuery) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(*) FROM comments c " +
+            "JOIN cards card ON c.card_id = card.id " +
+            "WHERE 1=1"
+        );
+        List<Object> params = new ArrayList<>();
+        
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            sql.append(" AND (LOWER(c.content) LIKE ? OR LOWER(c.username) LIKE ? OR LOWER(card.producer_name) LIKE ?)");
+            String pattern = "%" + searchQuery.toLowerCase() + "%";
+            params.add(pattern);
+            params.add(pattern);
+            params.add(pattern);
+        }
+        
+        try (Connection conn = DbUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (Object p : params) {
+                ps.setObject(i++, p);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
      * 将ResultSet行映射为Comment对象
      * @param rs 结果集
      * @return Comment对象
