@@ -55,7 +55,7 @@ public class ValidationUtil {
         if (username.length() > 20) {
             return "用户名长度不能超过20位";
         }
-        if (!username.matches("^[a-zA-Z0-9_]{4,20}$")) {
+        if (!username.matches("^[a-zA-Z0-9_]+$")) {
             return "用户名只能包含字母、数字和下划线";
         }
         return null;
@@ -71,7 +71,10 @@ public class ValidationUtil {
         if (password == null || password.isEmpty()) {
             return false;
         }
-        // 使用单个正则表达式检查所有要求：至少8位，包含字母和数字
+        // 使用单个正则表达式检查所有要求：
+        // (?=.*[a-zA-Z]) - 必须包含至少一个字母
+        // (?=.*[0-9]) - 必须包含至少一个数字
+        // .{8,} - 最少8位字符
         return password.matches("^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$");
     }
 
