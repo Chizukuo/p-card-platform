@@ -12,7 +12,7 @@
     <!-- SEO Meta Tags -->
     <title>P-Card 电子名片平台 - 制作人的专属名片墙</title>
     <meta name="description" content="P-Card电子名片平台，为制作人打造专属的数字名片墙，分享你的担当信息和制作人身份。">
-    <meta name="keywords" content="P-Card,电子名片,名片墙,制作人,担当,偶像">
+    <meta name="keywords" content="P-Card,电子名片,名片墙,制作人,偶像大师,名片分享平台,名片交换平台,名片,ACG,二次元,虚拟偶像,lovelive,bangdream">
     <meta name="robots" content="index, follow">
     <meta name="googlebot" content="index, follow">
     
