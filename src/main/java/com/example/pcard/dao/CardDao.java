@@ -232,11 +232,12 @@ public class CardDao {
         }
         
         // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
-        String[] searchVariants;
+        List<String> searchVariants;
         if (ChineseConverter.containsChinese(query)) {
             searchVariants = ChineseConverter.getSearchVariants(query);
         } else {
-            searchVariants = new String[]{query};
+            searchVariants = new ArrayList<>();
+            searchVariants.add(query);
         }
         
         // 构建动态SQL，根据变体数量调整OR条件
@@ -247,7 +248,7 @@ public class CardDao {
         );
         
         List<String> conditions = new ArrayList<>();
-        for (int i = 0; i < searchVariants.length; i++) {
+        for (int i = 0; i < searchVariants.size(); i++) {
             conditions.add("(LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ?)");
         }
         sql.append(String.join(" OR ", conditions));
@@ -283,11 +284,12 @@ public class CardDao {
         }
         
         // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
-        String[] searchVariants;
+        List<String> searchVariants;
         if (ChineseConverter.containsChinese(query)) {
             searchVariants = ChineseConverter.getSearchVariants(query);
         } else {
-            searchVariants = new String[]{query};
+            searchVariants = new ArrayList<>();
+            searchVariants.add(query);
         }
         
         // 构建动态SQL，根据变体数量调整OR条件
@@ -298,7 +300,7 @@ public class CardDao {
         );
         
         List<String> conditions = new ArrayList<>();
-        for (int i = 0; i < searchVariants.length; i++) {
+        for (int i = 0; i < searchVariants.size(); i++) {
             conditions.add("(LOWER(c.producer_name) LIKE ? OR LOWER(c.idol_name) LIKE ? OR LOWER(c.region) LIKE ? OR LOWER(c.unique_link_id) LIKE ?)");
         }
         sql.append(String.join(" OR ", conditions));
@@ -338,11 +340,12 @@ public class CardDao {
             q = q.trim();
             
             // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
-            String[] searchVariants;
+            List<String> searchVariants;
             if (ChineseConverter.containsChinese(q)) {
                 searchVariants = ChineseConverter.getSearchVariants(q);
             } else {
-                searchVariants = new String[]{q};
+                searchVariants = new ArrayList<>();
+                searchVariants.add(q);
             }
             
             // 构建动态搜索条件
@@ -385,11 +388,12 @@ public class CardDao {
             q = q.trim();
             
             // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
-            String[] searchVariants;
+            List<String> searchVariants;
             if (ChineseConverter.containsChinese(q)) {
                 searchVariants = ChineseConverter.getSearchVariants(q);
             } else {
-                searchVariants = new String[]{q};
+                searchVariants = new ArrayList<>();
+                searchVariants.add(q);
             }
             
             // 构建动态搜索条件
@@ -441,11 +445,12 @@ public class CardDao {
             q = q.trim();
             
             // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
-            String[] searchVariants;
+            List<String> searchVariants;
             if (ChineseConverter.containsChinese(q)) {
                 searchVariants = ChineseConverter.getSearchVariants(q);
             } else {
-                searchVariants = new String[]{q};
+                searchVariants = new ArrayList<>();
+                searchVariants.add(q);
             }
             
             // 构建动态搜索条件

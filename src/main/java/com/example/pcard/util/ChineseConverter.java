@@ -1,13 +1,17 @@
-﻿package com.example.pcard.util;
+package com.example.pcard.util;
 
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 中文简繁体转换工具类
- * 使用OpenCC4J库实现高质量的简繁体转换
  */
 public class ChineseConverter {
-    
+
+    /**
+     * 转换为简体中文
+     */
     public static String toSimplified(String text) {
         if (text == null || text.isEmpty()) {
             return text;
@@ -18,7 +22,10 @@ public class ChineseConverter {
             return text;
         }
     }
-    
+
+    /**
+     * 转换为繁体中文
+     */
     public static String toTraditional(String text) {
         if (text == null || text.isEmpty()) {
             return text;
@@ -29,38 +36,40 @@ public class ChineseConverter {
             return text;
         }
     }
-    
-    public static String[] getSearchVariants(String text) {
+
+    /**
+     * 获取搜索变体列表（包含原文、简体、繁体）
+     */
+    public static List<String> getSearchVariants(String text) {
+        List<String> variants = new ArrayList<>();
         if (text == null || text.isEmpty()) {
-            return new String[]{text};
+            return variants;
         }
         
-        String original = text;
-        String simplified = toSimplified(text);
-        String traditional = toTraditional(text);
+        variants.add(text);
         
-        if (original.equals(simplified) && original.equals(traditional)) {
-            return new String[]{original};
-        } else if (original.equals(simplified)) {
-            return new String[]{original, traditional};
-        } else if (original.equals(traditional)) {
-            return new String[]{original, simplified};
-        } else if (simplified.equals(traditional)) {
-            return new String[]{original, simplified};
-        } else {
-            return new String[]{original, simplified, traditional};
-        }
-    }
-    
-    public static boolean containsChinese(String text) {
-        if (text == null || text.isEmpty()) {
-            return false;
-        }
-        for (char c : text.toCharArray()) {
-            if (c >= 0x4E00 && c <= 0x9FFF) {
-                return true;
+        if (containsChinese(text)) {
+            String simplified = toSimplified(text);
+            String traditional = toTraditional(text);
+            
+            if (!variants.contains(simplified)) {
+                variants.add(simplified);
+            }
+            if (!variants.contains(traditional)) {
+                variants.add(traditional);
             }
         }
-        return false;
+        
+        return variants;
+    }
+
+    /**
+     * 检查文本是否包含中文字符
+     */
+    public static boolean containsChinese(String text) {
+        if (text == null) {
+            return false;
+        }
+        return text.matches(".*[\u4e00-\u9fa5]+.*");
     }
 }

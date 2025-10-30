@@ -129,11 +129,12 @@ public class UserDao {
             q = q.trim();
             
             // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
-            String[] searchVariants;
+            List<String> searchVariants;
             if (ChineseConverter.containsChinese(q)) {
                 searchVariants = ChineseConverter.getSearchVariants(q);
             } else {
-                searchVariants = new String[]{q};
+                searchVariants = new ArrayList<>();
+                searchVariants.add(q);
             }
             
             // 构建动态搜索条件
@@ -189,11 +190,12 @@ public class UserDao {
             q = q.trim();
             
             // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
-            String[] searchVariants;
+            List<String> searchVariants;
             if (ChineseConverter.containsChinese(q)) {
                 searchVariants = ChineseConverter.getSearchVariants(q);
             } else {
-                searchVariants = new String[]{q};
+                searchVariants = new ArrayList<>();
+                searchVariants.add(q);
             }
             
             // 构建动态搜索条件
@@ -249,11 +251,12 @@ public class UserDao {
             q = q.trim();
             
             // 检查是否包含中文，如果包含则生成简繁体变体进行搜索
-            String[] searchVariants;
+            List<String> searchVariants;
             if (ChineseConverter.containsChinese(q)) {
                 searchVariants = ChineseConverter.getSearchVariants(q);
             } else {
-                searchVariants = new String[]{q};
+                searchVariants = new ArrayList<>();
+                searchVariants.add(q);
             }
             
             // 构建动态搜索条件
