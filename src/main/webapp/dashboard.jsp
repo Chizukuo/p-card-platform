@@ -152,7 +152,7 @@
             <div class="form-group"><label for="cardBack">名片背面 (不更改则无需上传)</label><input type="file" id="cardBack" name="cardBack" class="form-control" accept="image/*"></div>
 
             <h3>社交平台 / 个人链接</h3>
-            <p class="form-text">请填写平台名称和对应的主页链接或号码。系统将根据平台名称自动匹配图标。</p>
+            <p class="form-text">请填写平台名称和对应的主页链接或号码。系统将根据平台名称自动匹配图标。<strong style="color: var(--primary-color);">最多添加10个链接。</strong></p>
             <div class="form-group">
                 <label for="visibility">可见性</label>
                 <select id="visibility" name="visibility" class="form-control">

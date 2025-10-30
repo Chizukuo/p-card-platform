@@ -112,20 +112,129 @@ function fallbackCopyTextToClipboard(text) {
 }
 
 // --- 动态添加/删除社交链接 ---
+// SNS链接数量上限
+const MAX_SNS_LINKS = 10;
+
 function addCustomSns() {
     const container = document.getElementById('custom-sns-container');
+    const currentCount = container.querySelectorAll('.custom-sns-item').length;
+    
+    // 检查是否已达到上限
+    if (currentCount >= MAX_SNS_LINKS) {
+        showToast(`最多只能添加 ${MAX_SNS_LINKS} 个社交链接`, 2500);
+        return;
+    }
+    
     const newItem = document.createElement('div');
     newItem.className = 'custom-sns-item';
     newItem.innerHTML = `
-        <input type="text" name="customSnsName" placeholder="平台 (e.g. 微博, Twitter, QQ)" class="form-control" required>
-        <input type="text" name="customSnsValue" placeholder="主页链接或号码" class="form-control" required>
+        <input type="text" name="customSnsName" placeholder="平台 (e.g. 微博, Twitter, QQ)" class="form-control" maxlength="30" required>
+        <input type="text" name="customSnsValue" placeholder="主页链接或号码" class="form-control" maxlength="500" required>
         <button type="button" class="btn btn-danger btn-sm" onclick="removeCustomSns(this)">移除</button>
     `;
     container.appendChild(newItem);
+    
+    // 为新添加的输入框添加验证
+    const valueInput = newItem.querySelector('input[name="customSnsValue"]');
+    valueInput.addEventListener('blur', function() {
+        validateSnsValue(this);
+    });
+    
+    // 更新按钮状态
+    updateAddSnsButtonState();
 }
 
 function removeCustomSns(button) {
     button.parentElement.remove();
+    // 更新按钮状态
+    updateAddSnsButtonState();
+}
+
+// 更新添加按钮的状态
+function updateAddSnsButtonState() {
+    const container = document.getElementById('custom-sns-container');
+    const addButton = document.querySelector('button[onclick="addCustomSns()"]');
+    
+    if (!container || !addButton) return;
+    
+    const currentCount = container.querySelectorAll('.custom-sns-item').length;
+    
+    if (currentCount >= MAX_SNS_LINKS) {
+        addButton.disabled = true;
+        addButton.title = `已达到最大数量限制 (${MAX_SNS_LINKS}个)`;
+        addButton.style.opacity = '0.5';
+        addButton.style.cursor = 'not-allowed';
+    } else {
+        addButton.disabled = false;
+        addButton.title = `添加社交链接 (${currentCount}/${MAX_SNS_LINKS})`;
+        addButton.style.opacity = '1';
+        addButton.style.cursor = 'pointer';
+    }
+}
+
+// 验证SNS链接值
+function validateSnsValue(input) {
+    const value = input.value.trim();
+    
+    if (!value) {
+        return true; // 空值由required属性处理
+    }
+    
+    // 检查长度
+    if (value.length > 500) {
+        input.setCustomValidity('链接长度不能超过500个字符');
+        showToast('链接长度不能超过500个字符', 2500);
+        return false;
+    }
+    
+    // 检查是否包含危险字符
+    const dangerousPatterns = [
+        /<script/i,
+        /javascript:/i,
+        /on\w+\s*=/i,  // onclick=, onerror= 等
+        /<iframe/i,
+        /<embed/i,
+        /<object/i
+    ];
+    
+    for (const pattern of dangerousPatterns) {
+        if (pattern.test(value)) {
+            input.setCustomValidity('链接包含不安全的内容');
+            showToast('检测到不安全的链接内容，请检查', 2500);
+            return false;
+        }
+    }
+    
+    // 如果是URL格式，进行额外验证
+    if (value.includes('://') || value.startsWith('www.')) {
+        try {
+            // 尝试构造URL（对于相对链接添加http://）
+            const urlString = value.startsWith('http') ? value : 'http://' + value;
+            const url = new URL(urlString);
+            
+            // 检查协议
+            if (!['http:', 'https:'].includes(url.protocol)) {
+                input.setCustomValidity('只支持 HTTP 或 HTTPS 链接');
+                showToast('只支持 HTTP 或 HTTPS 链接', 2500);
+                return false;
+            }
+            
+            // 检查主机名
+            if (!url.hostname || url.hostname.length < 3) {
+                input.setCustomValidity('无效的链接地址');
+                showToast('无效的链接地址', 2500);
+                return false;
+            }
+            
+        } catch (e) {
+            // URL解析失败，可能不是标准URL（如QQ号、用户名等），允许通过
+            // 但仍需检查是否包含危险内容
+        }
+    }
+    
+    // 验证通过
+    input.setCustomValidity('');
+    return true;
 }
 
 
@@ -375,6 +484,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 移动端侧栏菜单功能
     initMobileSidebar();
+    
+    // 初始化SNS链接验证和按钮状态
+    initSnsValidation();
 });
 
 // --- 移动端侧栏功能 ---
@@ -648,3 +760,66 @@ if (document.readyState === 'loading') {
 setInterval(() => {
     initTimestampFormatting();
 }, 60000);
+
+// ===== SNS链接验证初始化 =====
+/**
+ * 初始化SNS链接表单的验证功能
+ */
+function initSnsValidation() {
+    const container = document.getElementById('custom-sns-container');
+    if (!container) return;
+    
+    // 为现有的SNS输入框添加验证
+    const existingInputs = container.querySelectorAll('input[name="customSnsValue"]');
+    existingInputs.forEach(input => {
+        input.setAttribute('maxlength', '500');
+        input.addEventListener('blur', function() {
+            validateSnsValue(this);
+        });
+    });
+    
+    // 为现有的名称输入框添加长度限制
+    const nameInputs = container.querySelectorAll('input[name="customSnsName"]');
+    nameInputs.forEach(input => {
+        input.setAttribute('maxlength', '30');
+    });
+    
+    // 更新添加按钮状态
+    updateAddSnsButtonState();
+    
+    // 监听表单提交，进行最终验证
+    const cardForm = document.querySelector('form[action="cardAction"]');
+    if (cardForm) {
+        cardForm.addEventListener('submit', function(e) {
+            const snsItems = container.querySelectorAll('.custom-sns-item');
+            
+            // 检查数量限制
+            if (snsItems.length > MAX_SNS_LINKS) {
+                e.preventDefault();
+                showToast(`最多只能添加 ${MAX_SNS_LINKS} 个社交链接`, 2500);
+                return false;
+            }
+            
+            // 验证每个SNS链接
+            let isValid = true;
+            snsItems.forEach(item => {
+                const nameInput = item.querySelector('input[name="customSnsName"]');
+                const valueInput = item.querySelector('input[name="customSnsValue"]');
+                
+                if (nameInput && nameInput.value.trim().length > 30) {
+                    isValid = false;
+                    showToast('平台名称不能超过30个字符', 2500);
+                }
+                
+                if (valueInput && !validateSnsValue(valueInput)) {
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+}

@@ -34,6 +34,9 @@ public class CardServlet extends HttpServlet {
     private static final long MAX_FILE_SIZE = 5L * 1024L * 1024L; // 5MB
     private static final String BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final int SHORT_CODE_LENGTH = 7;
+    private static final int MAX_SNS_LINKS = 10; // SNS链接数量上限
+    private static final int MAX_SNS_NAME_LENGTH = 30; // SNS平台名称最大长度
+    private static final int MAX_SNS_VALUE_LENGTH = 500; // SNS链接值最大长度
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -198,13 +201,39 @@ public class CardServlet extends HttpServlet {
         String[] customNames = request.getParameterValues("customSnsName");
         String[] customValues = request.getParameterValues("customSnsValue");
         if (customNames != null && customValues != null) {
+            // 验证SNS链接数量
+            if (customNames.length > MAX_SNS_LINKS) {
+                throw new ServletException("SNS链接数量超过限制（最多" + MAX_SNS_LINKS + "个）");
+            }
+            
             for (int i = 0; i < customNames.length; i++) {
-                if (!customNames[i].isEmpty() && !customValues[i].isEmpty()) {
+                String name = customNames[i].trim();
+                String value = customValues[i].trim();
+                
+                if (!name.isEmpty() && !value.isEmpty()) {
+                    // 验证长度
+                    if (name.length() > MAX_SNS_NAME_LENGTH) {
+                        throw new ServletException("SNS平台名称过长（最多" + MAX_SNS_NAME_LENGTH + "个字符）");
+                    }
+                    if (value.length() > MAX_SNS_VALUE_LENGTH) {
+                        throw new ServletException("SNS链接过长（最多" + MAX_SNS_VALUE_LENGTH + "个字符）");
+                    }
+                    
+                    // 验证安全性（防止XSS和恶意脚本）
+                    if (!isSafeContent(name) || !isSafeContent(value)) {
+                        throw new ServletException("检测到不安全的内容");
+                    }
+                    
                     Card.SnsLink link = new Card.SnsLink();
-                    link.setName(customNames[i]);
-                    link.setValue(customValues[i]);
+                    link.setName(sanitizeInput(name));
+                    link.setValue(sanitizeInput(value));
                     snsLinks.add(link);
                 }
+            }
+            
+            // 再次检查处理后的链接数量
+            if (snsLinks.size() > MAX_SNS_LINKS) {
+                throw new ServletException("SNS链接数量超过限制（最多" + MAX_SNS_LINKS + "个）");
             }
         }
         card.setCustomSns(gson.toJson(snsLinks));
@@ -364,5 +393,61 @@ public class CardServlet extends HttpServlet {
             sb.append(BASE62.charAt(rnd.nextInt(BASE62.length())));
         }
         return sb.toString();
+    }
+    
+    /**
+     * 检查内容是否安全（防止XSS和脚本注入）
+     * @param content 要检查的内容
+     * @return 如果内容安全返回true，否则返回false
+     */
+    private boolean isSafeContent(String content) {
+        if (content == null) {
+            return true;
+        }
+        
+        String lowerContent = content.toLowerCase();
+        
+        // 检查危险的HTML标签和属性
+        String[] dangerousPatterns = {
+            "<script", "</script>", "javascript:", "onerror=", "onclick=",
+            "onload=", "onmouseover=", "<iframe", "</iframe>", "<embed",
+            "<object", "eval(", "expression(", "vbscript:", "data:text/html"
+        };
+        
+        for (String pattern : dangerousPatterns) {
+            if (lowerContent.contains(pattern)) {
+                return false;
+            }
+        }
+        
+        // 检查事件处理器属性模式 (on*)
+        if (lowerContent.matches(".*\\son\\w+\\s*=.*")) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * 清理输入内容，移除潜在的危险字符
+     * @param input 原始输入
+     * @return 清理后的内容
+     */
+    private String sanitizeInput(String input) {
+        if (input == null) {
+            return null;
+        }
+        
+        // 移除控制字符（除了常用的空白符）
+        String sanitized = input.replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]", "");
+        
+        // HTML编码特殊字符（仅对可能危险的字符进行编码）
+        sanitized = sanitized
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;");
+        
+        return sanitized.trim();
     }
 }

@@ -1524,11 +1524,22 @@ img.lazy-load {
     border-radius: var(--radius-m);
     border: 1px solid rgba(0, 113, 227, 0.1);
     transition: var(--transition);
+    position: relative;
 }
 
 .custom-sns-item:hover {
     background: rgba(0, 113, 227, 0.05);
     border-color: rgba(0, 113, 227, 0.2);
+}
+
+/* 验证错误状态 */
+.custom-sns-item .form-control:invalid {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.custom-sns-item .form-control:invalid:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 .custom-sns-item .form-control { 
@@ -1537,6 +1548,13 @@ img.lazy-load {
 
 .custom-sns-item .btn-danger { 
     flex-shrink: 0; 
+}
+
+/* 添加SNS按钮禁用状态 */
+button[onclick="addCustomSns()"]:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    background: #ccc !important;
 }
 
 /* My cards list on dashboard */
