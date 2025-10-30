@@ -4,6 +4,7 @@ import com.example.pcard.dao.UserDao;
 import com.example.pcard.model.User;
 import com.example.pcard.util.TurnstileVerifier;
 import com.example.pcard.util.TurnstileGate;
+import com.example.pcard.util.ValidationUtil;
 import org.mindrot.jbcrypt.BCrypt;
 
 import javax.servlet.ServletException;
@@ -34,9 +35,30 @@ public class RegisterServlet extends HttpServlet {
         String confirmPassword = request.getParameter("confirmPassword");
         String agreePolicy = request.getParameter("agreePolicy");
         
-        // 必须勾选隐私政策
-        if (agreePolicy == null) {
-            request.setAttribute("errorMessage", "请先阅读并勾选同意隐私政策");
+        // 验证用户名格式
+        String usernameError = ValidationUtil.getUsernameValidationError(username);
+        if (usernameError != null) {
+            request.setAttribute("errorMessage", usernameError);
+            request.getRequestDispatcher("register.jsp").forward(request, response);
+            return;
+        }
+        
+        // 验证昵称不为空且长度合理
+        if (nickname == null || nickname.trim().isEmpty()) {
+            request.setAttribute("errorMessage", "昵称不能为空");
+            request.getRequestDispatcher("register.jsp").forward(request, response);
+            return;
+        }
+        if (nickname.trim().length() > 50) {
+            request.setAttribute("errorMessage", "昵称长度不能超过50位");
+            request.getRequestDispatcher("register.jsp").forward(request, response);
+            return;
+        }
+        
+        // 验证密码强度
+        String passwordError = ValidationUtil.getPasswordValidationError(password);
+        if (passwordError != null) {
+            request.setAttribute("errorMessage", passwordError);
             request.getRequestDispatcher("register.jsp").forward(request, response);
             return;
         }
@@ -44,6 +66,13 @@ public class RegisterServlet extends HttpServlet {
         // 验证密码是否匹配
         if (!password.equals(confirmPassword)) {
             request.setAttribute("errorMessage", "两次输入的密码不一致!");
+            request.getRequestDispatcher("register.jsp").forward(request, response);
+            return;
+        }
+        
+        // 必须勾选隐私政策
+        if (agreePolicy == null) {
+            request.setAttribute("errorMessage", "请先阅读并勾选同意隐私政策");
             request.getRequestDispatcher("register.jsp").forward(request, response);
             return;
         }
@@ -76,7 +105,7 @@ public class RegisterServlet extends HttpServlet {
             }
             User newUser = new User();
             newUser.setUsername(username);
-            newUser.setNickname(nickname);
+            newUser.setNickname(nickname.trim());
             // Hash the password before storing
             String hashed = BCrypt.hashpw(password, BCrypt.gensalt(12));
             newUser.setPassword(hashed);

@@ -24,16 +24,17 @@
                 <div class="form-group">
                     <label for="username">用户名</label>
                     <input type="text" id="username" name="username" class="form-control" autocomplete="username" required>
-                    <small style="color: var(--text-secondary); font-size: 12px;">用户名用于登录</small>
+                    <small style="color: var(--text-secondary); font-size: 12px;">4-20位字符，只能包含字母、数字和下划线</small>
                 </div>
                 <div class="form-group">
                     <label for="nickname">昵称</label>
-                    <input type="text" id="nickname" name="nickname" class="form-control" autocomplete="nickname" required>
+                    <input type="text" id="nickname" name="nickname" class="form-control" autocomplete="nickname" maxlength="50" required>
                     <small style="color: var(--text-secondary); font-size: 12px;">昵称将显示在留言板和名片信息中</small>
                 </div>
                 <div class="form-group">
                     <label for="password">密码</label>
                     <input type="password" id="password" name="password" class="form-control" autocomplete="new-password" required>
+                    <small style="color: var(--text-secondary); font-size: 12px;">至少8位字符，必须包含字母和数字</small>
                 </div>
                 <div class="form-group">
                     <label for="confirmPassword">确认密码</label>
