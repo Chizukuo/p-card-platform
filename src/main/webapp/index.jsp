@@ -31,6 +31,10 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="${pageContext.request.scheme}://${pageContext.request.serverName}${pageContext.request.contextPath}/">
     
+    <!-- 网站图标 favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/favicon.png">
     <link rel="stylesheet" href="css/style.css">
     <style>
         /* 首页专属样式 */
