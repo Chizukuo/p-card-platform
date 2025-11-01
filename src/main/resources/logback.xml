@@ -21,6 +21,7 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_HOME}/pcard.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
     </appender>
     
@@ -39,18 +40,41 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_HOME}/error.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
     </appender>
     
+    <!-- 异步日志 - 文件输出 (性能优化) -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 队列大小 -->
+        <queueSize>512</queueSize>
+        <!-- 丢弃阈值：当队列满80%时，丢弃TRACE/DEBUG/INFO级别日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 不阻塞，如果队列满了则丢弃日志 -->
+        <neverBlock>true</neverBlock>
+        <!-- 引用同步appender -->
+        <appender-ref ref="FILE" />
+    </appender>
+    
+    <!-- 异步日志 - 错误文件输出 (性能优化) -->
+    <appender name="ASYNC_ERROR_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>256</queueSize>
+        <!-- 错误日志不丢弃 -->
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>false</neverBlock>
+        <appender-ref ref="ERROR_FILE" />
+    </appender>
+    
     <!-- 设置不同包的日志级别 -->
-    <logger name="com.example.pcard" level="DEBUG" />
+    <logger name="com.example.pcard" level="INFO" />
     <logger name="com.zaxxer.hikari" level="INFO" />
     <logger name="org.apache" level="WARN" />
+    <logger name="com.mysql" level="WARN" />
     
     <!-- 根日志级别 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
-        <appender-ref ref="FILE" />
-        <appender-ref ref="ERROR_FILE" />
+        <appender-ref ref="ASYNC_FILE" />
+        <appender-ref ref="ASYNC_ERROR_FILE" />
     </root>
 </configuration>

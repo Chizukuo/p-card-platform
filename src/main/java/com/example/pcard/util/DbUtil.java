@@ -48,12 +48,31 @@ public class DbUtil {
             throw new RuntimeException("数据库连接配置不完整！请检查环境变量: DB_URL, DB_USERNAME, DB_PASSWORD");
         }
 
-        // 连接池参数配置
-        config.setMaximumPoolSize(Integer.parseInt(getConfigValue(props, "db.pool.maximumPoolSize", "DB_POOL_MAX_SIZE", "10")));
-        config.setMinimumIdle(Integer.parseInt(getConfigValue(props, "db.pool.minimumIdle", "DB_POOL_MIN_IDLE", "2")));
-        config.setConnectionTimeout(Long.parseLong(getConfigValue(props, "db.pool.connectionTimeout", "DB_POOL_CONN_TIMEOUT", "30000")));
-        config.setIdleTimeout(Long.parseLong(getConfigValue(props, "db.pool.idleTimeout", "DB_POOL_IDLE_TIMEOUT", "600000")));
-        config.setMaxLifetime(Long.parseLong(getConfigValue(props, "db.pool.maxLifetime", "DB_POOL_MAX_LIFETIME", "1800000")));
+        // 连接池参数配置 - 性能优化
+        config.setMaximumPoolSize(Integer.parseInt(getConfigValue(props, "db.pool.maximumPoolSize", "DB_POOL_MAX_SIZE", "20")));
+        config.setMinimumIdle(Integer.parseInt(getConfigValue(props, "db.pool.minimumIdle", "DB_POOL_MIN_IDLE", "5")));
+        config.setConnectionTimeout(Long.parseLong(getConfigValue(props, "db.pool.connectionTimeout", "DB_POOL_CONN_TIMEOUT", "20000")));
+        config.setIdleTimeout(Long.parseLong(getConfigValue(props, "db.pool.idleTimeout", "DB_POOL_IDLE_TIMEOUT", "300000")));
+        config.setMaxLifetime(Long.parseLong(getConfigValue(props, "db.pool.maxLifetime", "DB_POOL_MAX_LIFETIME", "1200000")));
+        
+        // 连接池性能优化配置
+        config.setLeakDetectionThreshold(Long.parseLong(getConfigValue(props, "db.pool.leakDetectionThreshold", "DB_POOL_LEAK_DETECTION", "60000"))); // 60秒检测连接泄漏
+        config.setValidationTimeout(Long.parseLong(getConfigValue(props, "db.pool.validationTimeout", "DB_POOL_VALIDATION_TIMEOUT", "5000"))); // 5秒验证超时
+        
+        // 性能调优：禁用自动提交以减少网络往返
+        config.setAutoCommit(true); // 保持默认行为
+        
+        // 数据库性能优化参数
+        config.addDataSourceProperty("cachePrepStmts", "true"); // 启用预编译语句缓存
+        config.addDataSourceProperty("prepStmtCacheSize", "250"); // 缓存250个预编译语句
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048"); // SQL最大长度
+        config.addDataSourceProperty("useServerPrepStmts", "true"); // 使用服务端预编译
+        config.addDataSourceProperty("useLocalSessionState", "true"); // 减少SQL语句执行
+        config.addDataSourceProperty("rewriteBatchedStatements", "true"); // 批量操作优化
+        config.addDataSourceProperty("cacheResultSetMetadata", "true"); // 缓存ResultSet元数据
+        config.addDataSourceProperty("cacheServerConfiguration", "true"); // 缓存服务器配置
+        config.addDataSourceProperty("elideSetAutoCommits", "true"); // 减少不必要的autocommit调用
+        config.addDataSourceProperty("maintainTimeStats", "false"); // 禁用时间统计提高性能
         
         // 强制设置 MySQL 会话时区为东八区（解决 CURRENT_TIMESTAMP 时区问题）
         config.setConnectionInitSql("SET time_zone = '+08:00'");

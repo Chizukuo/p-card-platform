@@ -144,15 +144,23 @@ src/main/resources/
 | `DB_PASSWORD` | `db.password` | 无 | 数据库密码 |
 | `DB_DRIVER` | `db.driver` | `com.mysql.cj.jdbc.Driver` | JDBC 驱动类名 |
 
-### 数据库连接池配置（可选）
+### 数据库连接池配置（可选，性能优化）
 
 | 环境变量 | 配置文件键 | 默认值 | 说明 |
 |---------|----------|-------|------|
-| `DB_POOL_MAX_SIZE` | `db.pool.maximumPoolSize` | `10` | 连接池最大连接数 |
-| `DB_POOL_MIN_IDLE` | `db.pool.minimumIdle` | `2` | 连接池最小空闲连接数 |
-| `DB_POOL_CONN_TIMEOUT` | `db.pool.connectionTimeout` | `30000` | 获取连接超时时间（毫秒） |
-| `DB_POOL_IDLE_TIMEOUT` | `db.pool.idleTimeout` | `600000` | 连接空闲超时时间（毫秒） |
-| `DB_POOL_MAX_LIFETIME` | `db.pool.maxLifetime` | `1800000` | 连接最大生命周期（毫秒） |
+| `DB_POOL_MAX_SIZE` | `db.pool.maximumPoolSize` | `20` | 连接池最大连接数 |
+| `DB_POOL_MIN_IDLE` | `db.pool.minimumIdle` | `5` | 连接池最小空闲连接数 |
+| `DB_POOL_CONN_TIMEOUT` | `db.pool.connectionTimeout` | `20000` | 获取连接超时时间（毫秒） |
+| `DB_POOL_IDLE_TIMEOUT` | `db.pool.idleTimeout` | `300000` | 连接空闲超时时间（毫秒） |
+| `DB_POOL_MAX_LIFETIME` | `db.pool.maxLifetime` | `1200000` | 连接最大生命周期（毫秒） |
+| `DB_POOL_LEAK_DETECTION` | `db.pool.leakDetectionThreshold` | `60000` | 连接泄漏检测阈值（毫秒，60秒未归还则告警） |
+| `DB_POOL_VALIDATION_TIMEOUT` | `db.pool.validationTimeout` | `5000` | 连接验证超时时间（毫秒） |
+
+**连接池大小建议**：
+- 开发环境：`DB_POOL_MAX_SIZE=10`, `DB_POOL_MIN_IDLE=2`
+- 测试环境：`DB_POOL_MAX_SIZE=15`, `DB_POOL_MIN_IDLE=5`
+- 生产环境：`DB_POOL_MAX_SIZE=30`, `DB_POOL_MIN_IDLE=10`
+- 公式参考：`最大连接数 = CPU核心数 × 2 + 磁盘数`
 
 ### 时区配置（可选）
 
@@ -229,6 +237,8 @@ src/main/resources/
 docker run -e DB_URL="jdbc:mysql://mysql:3306/p_card_db?useSSL=false&serverTimezone=Asia/Shanghai" \
            -e DB_USERNAME="root" \
            -e DB_PASSWORD="your_password" \
+           -e DB_POOL_MAX_SIZE="20" \
+           -e DB_POOL_MIN_IDLE="5" \
            -e APP_TIMEZONE="Asia/Shanghai" \
            -e CF_TURNSTILE_SITE_KEY="your_site_key" \
            -e CF_TURNSTILE_SECRET="your_secret" \
@@ -242,6 +252,8 @@ gcloud run deploy p-card-platform \
   --set-env-vars DB_URL="jdbc:mysql://sql-instance:3306/p_card_db?useSSL=false" \
   --set-env-vars DB_USERNAME="root" \
   --set-env-vars DB_PASSWORD="your_password" \
+  --set-env-vars DB_POOL_MAX_SIZE="30" \
+  --set-env-vars DB_POOL_MIN_IDLE="10" \
   --set-env-vars USE_EXTERNAL_STORAGE="true" \
   --set-env-vars STORAGE_TYPE="gcs" \
   --set-env-vars GCS_BUCKET_NAME="p-card-uploads" \
@@ -279,11 +291,24 @@ spec:
         env:
         - name: APP_TIMEZONE
           value: "Asia/Shanghai"
+        - name: DB_POOL_MAX_SIZE
+          value: "30"
+        - name: DB_POOL_MIN_IDLE
+          value: "10"
         - name: STORAGE_TYPE
           value: "gcs"
         - name: GCS_BUCKET_NAME
           value: "p-card-uploads"
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
 ```
+
+> **性能监控建议**：在生产环境建议配置资源限制，并监控连接池使用率、缓存命中率等指标
 
 ---
 
@@ -333,8 +358,15 @@ spec:
 - 数据库连接与连接池
   - `DbUtil` 基于 HikariCP，支持从 `db.properties` 或环境变量读取配置
   - 连接初始化设置 `SET time_zone = '+08:00'`，配合 `TimeZoneUtil` 统一应用时区（默认 Asia/Shanghai）
+  - **性能优化**：已启用预编译语句缓存（250个）、批量操作优化、ResultSet元数据缓存等特性
+  - **连接泄漏检测**：60秒未归还的连接将触发告警日志
+- 缓存系统
+  - `CacheUtil`：内存LRU缓存，默认TTL 5分钟，最大1000条目
+  - `ChineseConverter`：简繁体转换结果缓存，最多500条/类型
 - 日志
   - `logback.xml` 定义控制台与滚动文件输出，区分普通日志与错误日志
+  - **异步日志**：采用异步Appender（队列512/256），消除I/O阻塞
+
 
 ---
 

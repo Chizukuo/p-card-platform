@@ -1,19 +1,48 @@
-# Database Configuration Template
-# Copy this file to db.properties and configure with your settings
+# 数据库配置示例
+# 复制此文件为 db.properties 并根据实际环境调整
 
-db.url=jdbc:mysql://localhost:3306/p_card_db?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+# 数据库连接信息
+db.url=jdbc:mysql://localhost:3306/pcard?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
 db.username=root
-db.password=YOUR_PASSWORD_HERE
+db.password=your_password
 db.driver=com.mysql.cj.jdbc.Driver
 
-# Application Timezone Configuration
-# 支持的时区格式: Asia/Shanghai, UTC, America/New_York, Europe/London 等
-# 也可通过环境变量 APP_TIMEZONE 覆盖此配置
-app.timezone=Asia/Shanghai
+# HikariCP 连接池配置（性能优化）
+# 最大连接数：根据实际负载调整（公式：核心数 * 2 + 有效磁盘数）
+db.pool.maximumPoolSize=20
 
-# HikariCP Connection Pool Settings
-db.pool.maximumPoolSize=10
-db.pool.minimumIdle=2
-db.pool.connectionTimeout=30000
-db.pool.idleTimeout=600000
-db.pool.maxLifetime=1800000
+# 最小空闲连接：保持一定数量的空闲连接以应对突发流量
+db.pool.minimumIdle=5
+
+# 连接超时（毫秒）：20秒
+db.pool.connectionTimeout=20000
+
+# 空闲超时（毫秒）：5分钟，超过此时间的空闲连接将被释放
+db.pool.idleTimeout=300000
+
+# 最大生命周期（毫秒）：20分钟，防止连接长时间占用
+db.pool.maxLifetime=1200000
+
+# 连接泄漏检测阈值（毫秒）：60秒，检测未正确关闭的连接
+db.pool.leakDetectionThreshold=60000
+
+# 验证超时（毫秒）：5秒
+db.pool.validationTimeout=5000
+
+# 环境特定配置建议：
+# 
+# 开发环境（低负载）：
+# db.pool.maximumPoolSize=10
+# db.pool.minimumIdle=2
+#
+# 测试环境（中等负载）：
+# db.pool.maximumPoolSize=15
+# db.pool.minimumIdle=5
+#
+# 生产环境（高负载）：
+# db.pool.maximumPoolSize=30
+# db.pool.minimumIdle=10
+#
+# 云环境（Cloud Run/App Engine）建议使用环境变量：
+# DB_URL, DB_USERNAME, DB_PASSWORD
+# DB_POOL_MAX_SIZE, DB_POOL_MIN_IDLE
