@@ -335,11 +335,11 @@
             io.observe(sentinel);
         })();
         
-        // 🧀 芝士碎屑点击特效 (优化版)
+        // 🧀 芝士碎屑点击特效 (强力扩散版)
         document.addEventListener('click', function(e) {
             // 使用更深、对比度更高的颜色
             const colors = ['#F4D03F', '#E67E22', '#D4AC0D', '#FFF', '#8D6E63'];
-            const particleCount = 24; // 增加粒子数量
+            const particleCount = 40; // 增加粒子数量
             
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
@@ -347,7 +347,7 @@
                 particle.style.left = e.clientX + 'px';
                 particle.style.top = e.clientY + 'px';
                 // 随机大小
-                const size = Math.random() * 10 + 5;
+                const size = Math.random() * 12 + 6;
                 particle.style.width = size + 'px';
                 particle.style.height = size + 'px';
                 particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
@@ -366,20 +366,20 @@
                 
                 // 物理参数
                 const angle = Math.random() * Math.PI * 2;
-                // 增加爆炸速度
-                const velocity = Math.random() * 150 + 80; 
+                // 大幅增加爆炸速度和扩散范围
+                const velocity = Math.random() * 400 + 150; 
                 const tx = Math.cos(angle) * velocity;
                 // 增加重力影响 (y轴向下偏移)
-                const ty = Math.sin(angle) * velocity + 100; 
+                const ty = Math.sin(angle) * velocity + 250; 
                 // 随机旋转
-                const rot = Math.random() * 360;
+                const rot = Math.random() * 720 - 360;
                 
                 particle.animate([
                     { transform: 'translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(1)', opacity: 1 },
                     { transform: `translate(-50%, -50%) translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(0)`, opacity: 0 }
                 ], {
-                    duration: Math.random() * 800 + 500, // 持续时间稍长
-                    easing: 'cubic-bezier(0.25, 1, 0.5, 1)' // 减速曲线
+                    duration: Math.random() * 1200 + 800, // 持续时间更长
+                    easing: 'cubic-bezier(0.1, 0.9, 0.2, 1)' // 更强烈的减速曲线
                 }).onfinish = () => particle.remove();
                 
                 document.body.appendChild(particle);

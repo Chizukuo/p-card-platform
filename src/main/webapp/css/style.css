@@ -1200,19 +1200,22 @@ img.lazy-load {
     padding: 40px 36px;
     container-type: inline-size;
     container-name: info-box;
-    background: #FFFDE7;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
     border: 2px dashed var(--border-color);
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-inner);
 }
 
 .info-box h2 {
     font-size: 36px;
     font-weight: 800;
     margin-bottom: 32px;
-    color: var(--cheese-accent);
+    color: var(--text-color);
     letter-spacing: 1px;
     position: relative;
     display: inline-block;
-    text-shadow: 2px 2px 0 rgba(255, 236, 179, 1);
+    text-shadow: none;
 }
 
 /* 制作人名称链接样式 */
@@ -1225,14 +1228,14 @@ img.lazy-load {
     padding: 4px 12px;
     border-radius: 12px;
     color: var(--cheese-accent);
-    background: rgba(255, 193, 7, 0.1);
+    background: rgba(244, 208, 63, 0.15);
 }
 
 .producer-name-link:hover {
     transform: translateY(-2px) scale(1.05);
     background: var(--cheese-primary);
-    color: #FFF;
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    color: #5D4037;
+    box-shadow: 0 4px 12px rgba(244, 208, 63, 0.3);
 }
 
 .producer-name-link:active {
@@ -1544,61 +1547,86 @@ img.lazy-load {
 .comment-list { 
     margin-top: 24px; 
     text-align: left; 
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .comment-item { 
-    padding: 18px; 
-    border-bottom: 2px solid var(--border-color);
+    padding: 20px 24px; 
+    border: 1px solid rgba(255, 255, 255, 0.6);
     transition: var(--transition);
-    border-radius: 12px;
-    margin-bottom: 8px;
-    background: rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(212, 172, 13, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.comment-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--cheese-primary);
+    opacity: 0.5;
+    transition: var(--transition);
 }
 
 .comment-item:hover {
-    background: var(--cheese-light);
-    border-bottom-color: var(--cheese-primary);
-    transform: translateX(4px);
-    box-shadow: 0 2px 8px rgba(212, 172, 13, 0.1);
+    background: #FFF;
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 8px 24px rgba(212, 172, 13, 0.12);
+    border-color: var(--cheese-primary);
 }
 
-.comment-item:last-child { 
-    border-bottom: none; 
+.comment-item:hover::before {
+    opacity: 1;
+    width: 6px;
 }
 
 .comment-item p { 
     margin: 0; 
     word-wrap: break-word;
-    line-height: 1.6;
+    line-height: 1.7;
     color: var(--text-color);
+    font-size: 15px;
 }
 
 .comment-meta {
     font-size: 13px; 
     color: var(--text-secondary); 
-    margin-top: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(93, 82, 71, 0.1);
     display: flex; 
     justify-content: space-between; 
     align-items: center;
 }
 
 .btn-delete-comment {
-    background: none; 
+    background: rgba(229, 115, 115, 0.1); 
     border: none; 
-    color: #E57373; /* 柔和的红色 */
+    color: #E57373;
     cursor: pointer; 
-    padding: 4px 8px; 
-    font-size: 13px; 
+    padding: 6px 12px; 
+    font-size: 12px; 
     font-family: inherit;
-    font-weight: 600;
-    border-radius: 6px;
+    font-weight: 700;
+    border-radius: 8px;
     transition: var(--transition);
+    opacity: 0.8;
 }
 
 .btn-delete-comment:hover { 
-    background: rgba(229, 115, 115, 0.1);
+    background: #FFEBEE;
     color: #D32F2F;
-    transform: scale(1.05);
+    transform: translateY(-1px);
+    opacity: 1;
+    box-shadow: 0 2px 6px rgba(211, 47, 47, 0.15);
 }
 
 /* Dashboard Form */
@@ -2990,15 +3018,16 @@ button[onclick="addCustomSns()"]:disabled {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--cheese-primary) 0%, var(--cheese-accent) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #5D4037;
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    border: 2px solid #FFF;
 }
 
 .comment-content-wrapper {
@@ -3015,8 +3044,8 @@ button[onclick="addCustomSns()"]:disabled {
 }
 
 .comment-username {
-    font-weight: 700;
-    color: #667eea;
+    font-weight: 800;
+    color: var(--text-color);
     font-size: 15px;
 }
 
@@ -3032,10 +3061,10 @@ button[onclick="addCustomSns()"]:disabled {
     font-size: 15px;
     word-wrap: break-word;
     margin-bottom: 8px;
-    padding: 10px 12px;
-    background: rgba(102, 126, 234, 0.03);
-    border-radius: 8px;
-    border-left: 3px solid #667eea;
+    padding: 12px 16px;
+    background: rgba(255, 253, 231, 0.6);
+    border-radius: 12px;
+    border-left: 4px solid var(--cheese-primary);
 }
 
 /* 评论操作按钮 */
@@ -3058,10 +3087,10 @@ button[onclick="addCustomSns()"]:disabled {
 .btn-reply, .btn-delete {
     background: none;
     border: none;
-    color: #667eea;
+    color: var(--cheese-accent);
     cursor: pointer;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     padding: 6px 12px;
     border-radius: 8px;
     transition: var(--transition);
@@ -3074,26 +3103,28 @@ button[onclick="addCustomSns()"]:disabled {
 }
 
 .btn-reply:hover {
-    background: rgba(102, 126, 234, 0.1);
+    background: rgba(255, 193, 7, 0.15);
     transform: translateY(-1px);
+    color: var(--cheese-dark);
 }
 
 .btn-delete {
-    color: #ef4444;
+    color: #E57373;
 }
 
 .btn-delete:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(229, 115, 115, 0.1);
     transform: translateY(-1px);
+    color: #D32F2F;
 }
 
 /* 回复表单容器 */
 .reply-form-container {
     margin-top: 12px;
-    padding: 14px;
-    background: rgba(102, 126, 234, 0.05);
-    border-radius: 8px;
-    border: 2px dashed rgba(102, 126, 234, 0.2);
+    padding: 16px;
+    background: rgba(255, 253, 231, 0.4);
+    border-radius: 12px;
+    border: 2px dashed var(--border-color);
     animation: slideDown 0.3s ease;
 }
 
@@ -3122,11 +3153,12 @@ button[onclick="addCustomSns()"]:disabled {
     border: 2px solid var(--border-color);
     transition: var(--transition);
     border-radius: 8px;
+    background: #FFF;
 }
 
 .reply-textarea:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--cheese-primary);
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15);
 }
 
 .reply-actions {
@@ -3139,7 +3171,7 @@ button[onclick="addCustomSns()"]:disabled {
     padding: 8px 20px;
     border-radius: 8px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: var(--transition);
     border: none;
@@ -3147,34 +3179,36 @@ button[onclick="addCustomSns()"]:disabled {
 }
 
 .btn-cancel {
-    background: #e5e7eb;
-    color: var(--text-color);
+    background: #F5F5F5;
+    color: var(--text-secondary);
 }
 
 .btn-cancel:hover {
-    background: #d1d5db;
+    background: #EEEEEE;
     transform: translateY(-1px);
+    color: var(--text-color);
 }
 
 .btn-submit {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    background: linear-gradient(135deg, var(--cheese-primary) 0%, var(--cheese-dark) 100%);
+    color: #5D4037;
+    box-shadow: 0 4px 0 #C5A028;
     display: inline-flex;
     align-items: center;
     gap: 6px;
 }
 
 .btn-submit:hover {
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 6px 0 #C5A028;
     transform: translateY(-2px);
+    background: linear-gradient(135deg, #F7DC6F 0%, var(--cheese-primary) 100%);
 }
 
 /* 回复列表 */
 .replies-container {
     margin-top: 10px;
     padding-top: 10px;
-    border-top: 2px solid rgba(102, 126, 234, 0.1);
+    border-top: 2px solid rgba(255, 193, 7, 0.1);
 }
 
 /* 最多3层嵌套缩进 */
@@ -3193,7 +3227,7 @@ button[onclick="addCustomSns()"]:disabled {
 /* 平铺模式（超过最大嵌套层级时） */
 .replies-container.flat {
     padding-left: 0;
-    border-top: 1px dashed rgba(102, 126, 234, 0.2);
+    border-top: 1px dashed rgba(255, 193, 7, 0.2);
     margin-top: 8px;
     padding-top: 8px;
 }
@@ -3201,35 +3235,36 @@ button[onclick="addCustomSns()"]:disabled {
 .reply-item {
     display: flex;
     gap: 10px;
-    padding: 10px 12px;
-    background: rgba(102, 126, 234, 0.03);
-    border-radius: 8px;
+    padding: 12px 14px;
+    background: rgba(255, 253, 231, 0.3);
+    border-radius: 12px;
     margin-bottom: 6px;
-    border-left: 3px solid rgba(102, 126, 234, 0.3);
+    border-left: 3px solid rgba(255, 193, 7, 0.3);
     transition: var(--transition);
     position: relative;
 }
 
 /* 不同层级的回复使用不同的视觉样式 */
 .reply-item[data-level="1"] {
-    background: rgba(102, 126, 234, 0.05);
-    border-left-color: rgba(102, 126, 234, 0.4);
+    background: rgba(255, 253, 231, 0.4);
+    border-left-color: rgba(255, 193, 7, 0.4);
 }
 
 .reply-item[data-level="2"] {
-    background: rgba(102, 126, 234, 0.08);
-    border-left-color: rgba(102, 126, 234, 0.5);
+    background: rgba(255, 253, 231, 0.5);
+    border-left-color: rgba(255, 193, 7, 0.5);
 }
 
 .reply-item[data-level="3"] {
-    background: rgba(102, 126, 234, 0.11);
-    border-left-color: rgba(102, 126, 234, 0.6);
+    background: rgba(255, 253, 231, 0.6);
+    border-left-color: rgba(255, 193, 7, 0.6);
 }
 
 .reply-item:hover {
-    background: rgba(102, 126, 234, 0.06);
-    border-left-color: #667eea;
+    background: #FFF;
+    border-left-color: var(--cheese-primary);
     transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(212, 172, 13, 0.08);
 }
 
 .reply-avatar {
@@ -3237,14 +3272,15 @@ button[onclick="addCustomSns()"]:disabled {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.7) 0%, rgba(118, 75, 162, 0.7) 100%);
+    background: linear-gradient(135deg, var(--cheese-primary) 0%, var(--cheese-accent) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #5D4037;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(255, 193, 7, 0.2);
 }
 
 .reply-content-wrapper {
@@ -3262,7 +3298,7 @@ button[onclick="addCustomSns()"]:disabled {
 
 .reply-username {
     font-weight: 700;
-    color: #667eea;
+    color: var(--text-color);
     font-size: 14px;
 }
 
@@ -3275,11 +3311,12 @@ button[onclick="addCustomSns()"]:disabled {
 }
 
 .reply-to i {
-    color: rgba(102, 126, 234, 0.6);
+    color: var(--cheese-accent);
+    opacity: 0.6;
 }
 
 .reply-to-username {
-    color: #764ba2;
+    color: var(--cheese-accent);
     font-weight: 600;
 }
 
@@ -3321,7 +3358,7 @@ button[onclick="addCustomSns()"]:disabled {
 .btn-reply-small, .btn-delete-small {
     background: none;
     border: none;
-    color: #667eea;
+    color: var(--cheese-accent);
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -3337,17 +3374,19 @@ button[onclick="addCustomSns()"]:disabled {
 }
 
 .btn-reply-small:hover {
-    background: rgba(102, 126, 234, 0.1);
+    background: rgba(255, 193, 7, 0.15);
     transform: translateY(-1px);
+    color: var(--cheese-dark);
 }
 
 .btn-delete-small {
-    color: #ef4444;
+    color: #E57373;
 }
 
 .btn-delete-small:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(229, 115, 115, 0.1);
     transform: translateY(-1px);
+    color: #D32F2F;
 }
 
 /* 空评论状态 */
@@ -3359,7 +3398,7 @@ button[onclick="addCustomSns()"]:disabled {
 
 .empty-comments i {
     font-size: 64px;
-    color: rgba(102, 126, 234, 0.3);
+    color: rgba(255, 193, 7, 0.2);
     margin-bottom: 16px;
     display: block;
 }
@@ -3610,16 +3649,16 @@ button[onclick="addCustomSns()"]:disabled {
     right: 30px;
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
+    background: linear-gradient(135deg, var(--cheese-primary) 0%, var(--cheese-accent) 100%);
+    color: #5D4037;
+    border: 2px solid #FFF;
     border-radius: 50%;
     font-size: 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.4);
     z-index: 999;
     opacity: 0;
     visibility: hidden;
@@ -3639,7 +3678,8 @@ button[onclick="addCustomSns()"]:disabled {
 
 .back-to-top:hover {
     transform: translateY(-4px) scale(1.05);
-    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 8px 30px rgba(255, 193, 7, 0.6);
+    background: linear-gradient(135deg, #F7DC6F 0%, var(--cheese-primary) 100%);
 }
 
 .back-to-top:active {
