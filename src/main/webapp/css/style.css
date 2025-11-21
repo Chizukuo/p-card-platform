@@ -4,29 +4,29 @@
  */
 
 /* ==========================================================================
-   CSS 变量定义 - 芝士流心配色方案
+   CSS 变量定义 - 芝士流心配色方案 (轻盈护眼版)
    ========================================================================== */
 :root {
-    /* 芝士主题色 */
-    --cheese-primary: #FFC107;    /* 主色：浓郁芝士 */
-    --cheese-dark: #FFB300;       /* 深色：烤焦芝士 */
-    --cheese-light: #FFECB3;      /* 浅色：奶油芝士 */
-    --cheese-accent: #FF6F00;     /* 强调：香橙芝士 */
-    --cheese-white: #FFFDE7;      /* 背景：牛奶白 */
+    /* 芝士主题色 - 低饱和度护眼版 */
+    --cheese-primary: #F4D03F;    /* 主色：柔和奶酪黄 */
+    --cheese-dark: #D4AC0D;       /* 深色：烤焦边缘 */
+    --cheese-light: #FCF3CF;      /* 浅色：内层奶酪 */
+    --cheese-accent: #E67E22;     /* 强调：杏子果酱色 */
+    --cheese-white: #FDFBF7;      /* 背景：米浆白 */
     
     /* 基础颜色映射 */
-    --bg-color: #FFF8E1;          /* 暖色背景 */
-    --card-bg: #FFFFFF;
-    --text-color: #5D4037;        /* 深褐色文本，像巧克力或烤面包 */
-    --text-secondary: #8D6E63;    /* 浅褐色文本 */
+    --bg-color: #F9F7F2;          /* 极淡的暖灰背景 */
+    --card-bg: rgba(255, 255, 255, 0.9); /* 半透明卡片 */
+    --text-color: #5D5247;        /* 灰褐色文本 */
+    --text-secondary: #90857A;    /* 浅灰褐 */
     --primary-color: var(--cheese-primary);
     --primary-hover: var(--cheese-dark);
-    --border-color: #FFE082;
+    --border-color: #F2E6C2;      /* 淡米色边框 */
     
-    /* 阴影系统 - 暖色调阴影 */
-    --shadow: 0 4px 12px rgba(255, 160, 0, 0.15);
-    --shadow-hover: 0 8px 24px rgba(255, 111, 0, 0.25);
-    --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    /* 阴影系统 - 更轻柔 */
+    --shadow: 0 8px 24px rgba(212, 172, 13, 0.08);
+    --shadow-hover: 0 12px 32px rgba(212, 172, 13, 0.15);
+    --shadow-inner: inset 0 2px 4px rgba(93, 82, 71, 0.03);
     
     --radius-l: 24px;
     --radius-m: 16px;
@@ -107,7 +107,12 @@ a, button, .btn, .p-card-item, img {
    ========================================================================== */
 body {
     font-family: "Nunito", "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+    background-color: var(--bg-color);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(244, 208, 63, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(230, 126, 34, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(244, 208, 63, 0.15) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(230, 126, 34, 0.08) 0px, transparent 50%);
     background-attachment: fixed;
     color: var(--text-color);
     margin: 0;
@@ -129,23 +134,23 @@ body {
 body::before {
     content: '';
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: 
-        radial-gradient(circle at 15% 25%, rgba(255, 193, 7, 0.2) 0%, transparent 20%),
-        radial-gradient(circle at 85% 75%, rgba(255, 167, 38, 0.15) 0%, transparent 25%),
-        radial-gradient(circle at 50% 50%, rgba(255, 236, 179, 0.3) 0%, transparent 40%),
-        radial-gradient(circle at 20% 80%, rgba(255, 111, 0, 0.05) 0%, transparent 15%);
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+        radial-gradient(circle at 50% 50%, rgba(244, 208, 63, 0.05) 0%, transparent 10%),
+        radial-gradient(circle at 20% 30%, rgba(244, 208, 63, 0.05) 0%, transparent 15%),
+        radial-gradient(circle at 80% 70%, rgba(244, 208, 63, 0.05) 0%, transparent 12%);
+    background-size: 100px 100px;
     pointer-events: none;
-    z-index: 0;
-    animation: backgroundFloat 20s ease-in-out infinite alternate;
+    z-index: -1;
+    animation: backgroundFloat 60s linear infinite;
 }
 
 @keyframes backgroundFloat {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.1); }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 body > .container {
@@ -250,7 +255,7 @@ a:hover {
 /* 移动端侧栏菜单 */
 .mobile-menu-btn {
     display: none;
-    background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
+    background: linear-gradient(135deg, var(--cheese-primary) 0%, var(--cheese-accent) 100%);
     border: none;
     font-size: 24px;
     cursor: pointer;
@@ -259,7 +264,7 @@ a:hover {
     transition: var(--transition);
     z-index: 1001;
     border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
+    box-shadow: 0 4px 16px rgba(230, 126, 34, 0.4);
     position: relative;
     overflow: hidden;
 }
@@ -726,22 +731,22 @@ select.form-control:hover {
 }
 
 .btn-primary { 
-    background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%);
+    background: linear-gradient(135deg, var(--cheese-primary) 0%, var(--cheese-dark) 100%);
     color: #5D4037; /* 深褐色文字对比度更好 */
-    box-shadow: 0 4px 0 #FF8F00; /* 3D 按钮效果 */
+    box-shadow: 0 4px 0 #C5A028; /* 3D 按钮效果 */
     position: relative;
     z-index: 1;
     margin-bottom: 4px; /* 补偿阴影高度 */
 }
 
 .btn-primary:hover {
-    box-shadow: 0 6px 0 #FF8F00;
+    box-shadow: 0 6px 0 #C5A028;
     transform: translateY(-2px);
-    background: linear-gradient(135deg, #FFCA28 0%, #FFC107 100%);
+    background: linear-gradient(135deg, #F7DC6F 0%, var(--cheese-primary) 100%);
 }
 
 .btn-primary:active {
-    box-shadow: 0 0 0 #FF8F00;
+    box-shadow: 0 0 0 #C5A028;
     transform: translateY(4px);
 }
 
@@ -1543,15 +1548,18 @@ img.lazy-load {
 
 .comment-item { 
     padding: 18px; 
-    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 2px solid var(--border-color);
     transition: var(--transition);
-    border-radius: 8px;
+    border-radius: 12px;
     margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .comment-item:hover {
-    background: rgba(102, 126, 234, 0.03);
-    border-bottom-color: rgba(102, 126, 234, 0.2);
+    background: var(--cheese-light);
+    border-bottom-color: var(--cheese-primary);
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(212, 172, 13, 0.1);
 }
 
 .comment-item:last-child { 
@@ -1577,7 +1585,7 @@ img.lazy-load {
 .btn-delete-comment {
     background: none; 
     border: none; 
-    color: #f5576c;
+    color: #E57373; /* 柔和的红色 */
     cursor: pointer; 
     padding: 4px 8px; 
     font-size: 13px; 
@@ -1588,7 +1596,8 @@ img.lazy-load {
 }
 
 .btn-delete-comment:hover { 
-    background: rgba(245, 87, 108, 0.1);
+    background: rgba(229, 115, 115, 0.1);
+    color: #D32F2F;
     transform: scale(1.05);
 }
 
@@ -1911,7 +1920,7 @@ button[onclick="addCustomSns()"]:disabled {
     font-size: 13px; 
     font-weight: 700;
     border-radius: 20px; 
-    background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%);
+    background: linear-gradient(135deg, var(--cheese-primary) 0%, var(--cheese-dark) 100%);
     color: #5D4037;
     border: none;
     text-transform: uppercase;

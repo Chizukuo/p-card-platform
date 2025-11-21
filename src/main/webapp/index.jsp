@@ -335,35 +335,51 @@
             io.observe(sentinel);
         })();
         
-        // 🧀 芝士碎屑点击特效
+        // 🧀 芝士碎屑点击特效 (优化版)
         document.addEventListener('click', function(e) {
-            const colors = ['#FFC107', '#FFB300', '#FFECB3', '#FF6F00'];
-            const particleCount = 12;
+            // 使用更深、对比度更高的颜色
+            const colors = ['#F4D03F', '#E67E22', '#D4AC0D', '#FFF', '#8D6E63'];
+            const particleCount = 24; // 增加粒子数量
             
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
                 particle.style.position = 'fixed';
                 particle.style.left = e.clientX + 'px';
                 particle.style.top = e.clientY + 'px';
-                particle.style.width = Math.random() * 8 + 4 + 'px';
-                particle.style.height = particle.style.width;
+                // 随机大小
+                const size = Math.random() * 10 + 5;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
                 particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px'; // 圆形或方形碎屑
-                particle.style.pointerEvents = 'none';
-                particle.style.zIndex = '9999';
+                // 随机形状：圆形、方形、三角形(用clip-path模拟)
+                const shapeType = Math.random();
+                if (shapeType > 0.6) {
+                    particle.style.borderRadius = '50%';
+                } else if (shapeType > 0.3) {
+                    particle.style.borderRadius = '2px';
+                } else {
+                    particle.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+                }
                 
-                // 随机速度和角度
+                particle.style.pointerEvents = 'none';
+                particle.style.zIndex = '2147483647'; // 最高层级
+                
+                // 物理参数
                 const angle = Math.random() * Math.PI * 2;
-                const velocity = Math.random() * 100 + 50;
+                // 增加爆炸速度
+                const velocity = Math.random() * 150 + 80; 
                 const tx = Math.cos(angle) * velocity;
-                const ty = Math.sin(angle) * velocity;
+                // 增加重力影响 (y轴向下偏移)
+                const ty = Math.sin(angle) * velocity + 100; 
+                // 随机旋转
+                const rot = Math.random() * 360;
                 
                 particle.animate([
-                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-                    { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                    { transform: 'translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(1)', opacity: 1 },
+                    { transform: `translate(-50%, -50%) translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(0)`, opacity: 0 }
                 ], {
-                    duration: Math.random() * 600 + 400,
-                    easing: 'cubic-bezier(0, .9, .57, 1)'
+                    duration: Math.random() * 800 + 500, // 持续时间稍长
+                    easing: 'cubic-bezier(0.25, 1, 0.5, 1)' // 减速曲线
                 }).onfinish = () => particle.remove();
                 
                 document.body.appendChild(particle);
