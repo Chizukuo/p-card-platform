@@ -147,7 +147,7 @@
                 <a href="card/${card.uniqueLinkId}" class="p-card-item-link">
                     <div class="p-card-item">
                         <%-- 构建图片 URL，区分绝对路径和相对路径 --%>
-                        <c:set var="imgPath" value="${card.cardFrontPath != null ? card.cardFrontPath : 'https://placehold.co/600x400/0071e3/ffffff?text=P-CARD'}" />
+                        <c:set var="imgPath" value="${card.cardFrontPath != null ? card.cardFrontPath : 'https://placehold.co/600x400/FFC107/5D4037?text=P-CARD'}" />
                         <c:set var="imgUrl" value="${imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : pageContext.request.contextPath.concat('/').concat(imgPath)}" />
                         
                         <div class="p-card-img-wrapper">
@@ -158,7 +158,7 @@
                                 data-src="${imgUrl}" 
                                 alt="${card.producerName} 的名片"
                                 class="lazy-load"
-                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect fill='%23f0f0f0' width='600' height='400'/%3E%3C/svg%3E">
+                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect fill='%23FFF8E1' width='600' height='400'/%3E%3C/svg%3E">
                         </div>
                         <div class="p-card-info">
                             <h3><c:out value="${card.producerName}"/></h3>
@@ -259,7 +259,7 @@
                                 ? c.cardFrontPath 
                                 : ctx + '/' + c.cardFrontPath;
                         } else {
-                            imgSrc = 'https://placehold.co/600x400/0071e3/ffffff?text=P-CARD';
+                            imgSrc = 'https://placehold.co/600x400/FFC107/5D4037?text=P-CARD';
                         }
                         
                         imgBg.style.backgroundImage = `url('${imgSrc}')`;
@@ -268,7 +268,7 @@
                         const img = document.createElement('img');
                         img.setAttribute('data-src', imgSrc);
                         img.className = 'lazy-load';
-                        img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect fill='%23f0f0f0' width='600' height='400'/%3E%3C/svg%3E";
+                        img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect fill='%23FFF8E1' width='600' height='400'/%3E%3C/svg%3E";
                         img.alt = (c.producerName || '') + ' 的名片';
                         
                         imgWrapper.appendChild(imgBg);
@@ -334,6 +334,41 @@
             }, { rootMargin: '200px' });
             io.observe(sentinel);
         })();
+        
+        // 🧀 芝士碎屑点击特效
+        document.addEventListener('click', function(e) {
+            const colors = ['#FFC107', '#FFB300', '#FFECB3', '#FF6F00'];
+            const particleCount = 12;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'fixed';
+                particle.style.left = e.clientX + 'px';
+                particle.style.top = e.clientY + 'px';
+                particle.style.width = Math.random() * 8 + 4 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px'; // 圆形或方形碎屑
+                particle.style.pointerEvents = 'none';
+                particle.style.zIndex = '9999';
+                
+                // 随机速度和角度
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 100 + 50;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+                
+                particle.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: Math.random() * 600 + 400,
+                    easing: 'cubic-bezier(0, .9, .57, 1)'
+                }).onfinish = () => particle.remove();
+                
+                document.body.appendChild(particle);
+            }
+        });
     </script>
     <script src="js/script.js"></script>
 </body>
